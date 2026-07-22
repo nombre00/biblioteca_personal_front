@@ -1,0 +1,28 @@
+@if (cargando()) {
+  <p>Cargando libros...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (libros().length === 0) {
+  <p>Todavía no hay libros registrados.</p>
+} @else {
+  <ul class="libro-list">
+    @for (libro of libros(); track libro.id) {
+      <li class="libro-item">
+        @if (libro.portadaUrl) {
+          <img [src]="libro.portadaUrl" [alt]="libro.titulo" class="portada" />
+        } @else {
+          <div class="portada portada-placeholder">Sin portada</div>
+        }
+
+        <div class="info">
+          <h3>
+            <a [routerLink]="['/libros', libro.id]">{{ libro.titulo }}</a>
+          </h3>
+          <p>{{ libro.autor.nombre }}</p>
+          <p>{{ libro.generoNombres.join(', ') }}</p>
+          <span class="estado">{{ libro.estado }}</span>
+        </div>
+      </li>
+    }
+  </ul>
+}

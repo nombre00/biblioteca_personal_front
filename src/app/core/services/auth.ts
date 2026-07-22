@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import {
   signInWithEmailAndPassword,
   signOut,
@@ -14,18 +14,21 @@ export class Auth {
   private currentUser: User | null = null;
   private authReady: Promise<User | null>;
 
+  readonly isLoggedInSignal = signal(false);
+
   constructor() {
     this.authReady = new Promise((resolve) => {
       const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
         this.currentUser = user;
+        this.isLoggedInSignal.set(user !== null);
         resolve(user);
         unsubscribe();
       });
     });
-    
-    // Se sigue ejecutando en cada cambio posterior de auth (login, logout)
+
     onAuthStateChanged(firebaseAuth, (user) => {
       this.currentUser = user;
+      this.isLoggedInSignal.set(user !== null);
     });
   }
 
