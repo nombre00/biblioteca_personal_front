@@ -12,13 +12,25 @@ import { firebaseAuth } from '../firebase.config';
 })
 export class Auth {
   private currentUser: User | null = null;
+  private authReady: Promise<User | null>;
 
   constructor() {
-    // Se ejecuta automáticamente cada vez que cambia el estado de auth
-    // (login, logout, o al recargar la página si Firebase recupera la sesión)
+    this.authReady = new Promise((resolve) => {
+      const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+        this.currentUser = user;
+        resolve(user);
+        unsubscribe();
+      });
+    });
+    
+    // Se sigue ejecutando en cada cambio posterior de auth (login, logout)
     onAuthStateChanged(firebaseAuth, (user) => {
       this.currentUser = user;
     });
+  }
+
+  waitForAuthReady(): Promise<User | null> {
+    return this.authReady;
   }
 
   login(email: string, password: string) {
