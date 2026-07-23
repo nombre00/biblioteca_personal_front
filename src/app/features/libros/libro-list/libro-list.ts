@@ -28,4 +28,10 @@ export class LibroList implements OnInit {
       }
     });
   }
+
+  nombresGeneros(libro: LibroResponseDTO): string {
+    return libro.generos.length
+      ? libro.generos.map(g => g.nombre).join(', ')
+      : 'Sin género';
+  }
 }

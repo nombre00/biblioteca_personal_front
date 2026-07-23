@@ -1,5 +1,5 @@
-import { AutorResumenDTO } from './autor'
-
+import { AutorResumenDTO } from './autor';
+import { GeneroDTO } from './genero';
 
 export type EstadoLectura = 'LEIDO' | 'LEYENDO' | 'POR_LEER';
 
@@ -27,5 +27,5 @@ export interface LibroResponseDTO {
   portadaUrl: string;
   estado: EstadoLectura;
   autor: AutorResumenDTO;
-  generoNombres: string[];
+  generos: GeneroDTO[];
 }

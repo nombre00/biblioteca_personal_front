@@ -1,0 +1,14 @@
+@if (cargando()) {
+  <p>Cargando autor...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (autor(); as a) {
+  <h2>{{ a.nombre }}</h2>
+  <p>País: {{ a.pais.nombre }}</p>
+  <p>Idioma: {{ a.idioma }}</p>
+
+  <section class="biografia">
+    <h3>Biografía</h3>
+    <p class="placeholder">Este autor todavía no tiene biografía disponible.</p>
+  </section>
+}

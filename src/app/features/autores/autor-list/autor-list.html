@@ -1,0 +1,18 @@
+@if (cargando()) {
+  <p>Cargando autores...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (autores().length === 0) {
+  <p>Todavía no hay autores registrados.</p>
+} @else {
+  <ul class="autor-list">
+    @for (autor of autores(); track autor.id) {
+      <li>
+        <a [routerLink]="['/autores', autor.id]">{{ autor.nombre }}</a>
+        — {{ autor.pais.nombre }}
+      </li>
+    }
+  </ul>
+}
+
+<a routerLink="/autores/nuevo">Nuevo autor</a>

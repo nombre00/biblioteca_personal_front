@@ -1,1 +1,133 @@
-<p>libro-form works!</p>
+@if (cargando()) {
+  <p>Cargando datos...</p>
+} @else if (errorCarga()) {
+  <p class="error">{{ errorCarga() }}</p>
+} @else {
+  <h2>Gestionar libros</h2>
+
+  <label>
+    Libro a editar
+    <select
+      [value]="libroSeleccionadoId()"
+      (change)="onSeleccionarLibro($any($event.target).value)"
+    >
+      <option [value]="0">-- Nuevo libro --</option>
+      @for (libro of libros(); track libro.id) {
+        <option [value]="libro.id">{{ libro.titulo }}</option>
+      }
+    </select>
+  </label>
+
+  @if (cargandoLibro()) {
+    <p>Cargando libro...</p>
+  } @else {
+    <form (submit)="onSubmit(); $event.preventDefault()">
+      <label>
+        Título
+        <input [formField]="libroForm.titulo" />
+        @if (libroForm.titulo().touched() && libroForm.titulo().errors().length) {
+          <span class="error">{{ libroForm.titulo().errors()[0].message }}</span>
+        }
+      </label>
+
+      <label>
+        ISBN
+        <input [formField]="libroForm.isbn" />
+      </label>
+
+      <label>
+        URL de portada
+        <input [formField]="libroForm.portadaUrl" />
+      </label>
+
+      <label>
+        Estado
+        <select [formField]="libroForm.estado">
+          <option value="POR_LEER">Por leer</option>
+          <option value="LEYENDO">Leyendo</option>
+          <option value="LEIDO">Leído</option>
+        </select>
+      </label>
+
+      <label>
+        Autor
+        <select [formField]="libroForm.autorId">
+          <option [value]="0" disabled>Selecciona un autor</option>
+          @for (autor of autores(); track autor.id) {
+            <option [value]="autor.id">{{ autor.nombre }} ({{ autor.pais.nombre }})</option>
+          }
+        </select>
+        @if (libroForm.autorId().touched() && libroForm.autorId().errors().length) {
+          <span class="error">{{ libroForm.autorId().errors()[0].message }}</span>
+        }
+      </label>
+
+      <fieldset>
+        <legend>Géneros</legend>
+
+        @if (generosSeleccionados().length === 0) {
+          <p>Ningún género seleccionado todavía.</p>
+        } @else {
+          <ul class="generos-seleccionados">
+            @for (genero of generosSeleccionados(); track genero.id) {
+              <li>
+                {{ genero.nombre }}
+                <button type="button" (click)="quitarGenero(genero.id!)">Quitar</button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (generosDisponibles().length > 0) {
+          <div class="agregar-genero">
+            <select [formField]="libroForm.generoParaAgregar">
+              <option [value]="0" disabled>Selecciona un género</option>
+              @for (genero of generosDisponibles(); track genero.id) {
+                <option [value]="genero.id">{{ genero.nombre }}</option>
+              }
+            </select>
+            <button type="button" (click)="agregarGenero()">Agregar</button>
+          </div>
+        }
+
+        <div class="genero-nuevo">
+          <input
+            type="text"
+            placeholder="Nombre de un género nuevo"
+            [value]="nombreGeneroNuevo()"
+            (input)="nombreGeneroNuevo.set($any($event.target).value)"
+          />
+          <button type="button" (click)="crearGeneroNuevo()" [disabled]="creandoGenero()">
+            {{ creandoGenero() ? 'Creando...' : 'Crear género' }}
+          </button>
+          @if (errorGenero()) {
+            <p class="error">{{ errorGenero() }}</p>
+          }
+        </div>
+      </fieldset>
+
+      @if (errorEnvio()) {
+        <p class="error">{{ errorEnvio() }}</p>
+      }
+      @if (mensajeExito()) {
+        <p class="exito">{{ mensajeExito() }}</p>
+      }
+
+      <div class="acciones">
+        <button type="submit" [disabled]="libroForm().invalid() || enviando()">
+          {{ enviando() ? 'Guardando...' : (libroSeleccionadoId() === 0 ? 'Crear libro' : 'Guardar cambios') }}
+        </button>
+
+        @if (libroSeleccionadoId() !== 0) {
+          <button type="button" (click)="eliminar()" [disabled]="eliminando()">
+            {{ eliminando() ? 'Eliminando...' : 'Eliminar libro' }}
+          </button>
+        }
+      </div>
+
+      @if (errorEliminar()) {
+        <p class="error">{{ errorEliminar() }}</p>
+      }
+    </form>
+  }
+}

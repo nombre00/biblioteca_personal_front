@@ -1,0 +1,90 @@
+@if (cargando()) {
+  <p>Cargando datos...</p>
+} @else if (errorCarga()) {
+  <p class="error">{{ errorCarga() }}</p>
+} @else {
+  <h2>Gestionar autores</h2>
+
+  <label>
+    Autor a editar
+    <select
+      [value]="autorSeleccionadoId()"
+      (change)="onSeleccionarAutor($any($event.target).value)"
+    >
+      <option [value]="0">-- Nuevo autor --</option>
+      @for (autor of autores(); track autor.id) {
+        <option [value]="autor.id">{{ autor.nombre }}</option>
+      }
+    </select>
+  </label>
+
+  @if (cargandoAutor()) {
+    <p>Cargando autor...</p>
+  } @else {
+    <form (submit)="onSubmit(); $event.preventDefault()">
+      <label>
+        Nombre
+        <input [formField]="autorForm.nombre" />
+        @if (autorForm.nombre().touched() && autorForm.nombre().errors().length) {
+          <span class="error">{{ autorForm.nombre().errors()[0].message }}</span>
+        }
+      </label>
+
+      <label>
+        Idioma
+        <input [formField]="autorForm.idioma" />
+      </label>
+
+      <label>
+        País
+        <select [formField]="autorForm.paisId">
+          <option [value]="0" disabled>Selecciona un país</option>
+          @for (pais of paises(); track pais.id) {
+            <option [value]="pais.id">{{ pais.nombre }}</option>
+          }
+        </select>
+        @if (autorForm.paisId().touched() && autorForm.paisId().errors().length) {
+          <span class="error">{{ autorForm.paisId().errors()[0].message }}</span>
+        }
+      </label>
+
+      <div class="pais-nuevo">
+        <input
+          type="text"
+          placeholder="Nombre de un país nuevo"
+          [value]="nombrePaisNuevo()"
+          (input)="nombrePaisNuevo.set($any($event.target).value)"
+        />
+        <button type="button" (click)="crearPaisNuevo()" [disabled]="creandoPais()">
+          {{ creandoPais() ? 'Creando...' : 'Crear país' }}
+        </button>
+        @if (errorPais()) {
+          <p class="error">{{ errorPais() }}</p>
+        }
+      </div>
+
+      @if (errorEnvio()) {
+        <p class="error">{{ errorEnvio() }}</p>
+      }
+      @if (mensajeExito()) {
+        <p class="exito">{{ mensajeExito() }}</p>
+      }
+
+      <div class="acciones">
+        <button type="submit" [disabled]="autorForm().invalid() || enviando()">
+          {{ enviando() ? 'Guardando...' : (autorSeleccionadoId() === 0 ? 'Crear autor' : 'Guardar cambios') }}
+        </button>
+
+        @if (autorSeleccionadoId() !== 0) {
+          <button type="button" (click)="eliminar()" [disabled]="eliminando()">
+            {{ eliminando() ? 'Eliminando...' : 'Eliminar autor' }}
+          </button>
+        }
+      </div>
+
+      @if (errorEliminar()) {
+        <p class="error">{{ errorEliminar() }}</p>
+      }
+    </form>
+  }
+}

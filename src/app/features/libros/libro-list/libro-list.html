@@ -19,7 +19,7 @@
             <a [routerLink]="['/libros', libro.id]">{{ libro.titulo }}</a>
           </h3>
           <p>{{ libro.autor.nombre }}</p>
-          <p>{{ libro.generoNombres.join(', ') }}</p>
+          <p>{{ nombresGeneros(libro) }}</p>
           <span class="estado">{{ libro.estado }}</span>
         </div>
       </li>

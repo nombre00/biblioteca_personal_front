@@ -1,1 +1,33 @@
-<p>libro-detail works!</p>
+@if (cargando()) {
+  <p>Cargando libro...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (libro(); as l) {
+  <div class="libro-detail">
+    @if (l.portadaUrl) {
+      <img [src]="l.portadaUrl" [alt]="l.titulo" class="portada" />
+    } @else {
+      <div class="portada portada-placeholder">Sin portada</div>
+    }
+
+    <div class="info">
+      <h2>{{ l.titulo }}</h2>
+
+      <p>
+        Autor:
+        <a [routerLink]="['/autores', l.autor.id]">{{ l.autor.nombre }}</a>
+      </p>
+
+      <p>Géneros: {{ nombresGeneros(l) }}</p>
+      <p>Estado: {{ l.estado }}</p>
+      @if (l.isbn) {
+        <p>ISBN: {{ l.isbn }}</p>
+      }
+
+      <section class="resumen">
+        <h3>Resumen</h3>
+        <p class="placeholder">Este libro todavía no tiene resumen disponible.</p>
+      </section>
+    </div>
+  </div>
+}
