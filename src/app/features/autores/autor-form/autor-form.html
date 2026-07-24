@@ -38,7 +38,7 @@
       <label>
         País
         <select [formField]="autorForm.paisId">
-          <option [value]="0" disabled>Selecciona un país</option>
+          <option value="" disabled>Selecciona un país</option>
           @for (pais of paises(); track pais.id) {
             <option [value]="pais.id">{{ pais.nombre }}</option>
           }

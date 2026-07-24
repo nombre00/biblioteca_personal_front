@@ -52,7 +52,7 @@
       <label>
         Autor
         <select [formField]="libroForm.autorId">
-          <option [value]="0" disabled>Selecciona un autor</option>
+          <option value="" disabled>Selecciona un autor</option>
           @for (autor of autores(); track autor.id) {
             <option [value]="autor.id">{{ autor.nombre }} ({{ autor.pais.nombre }})</option>
           }
@@ -81,7 +81,7 @@
         @if (generosDisponibles().length > 0) {
           <div class="agregar-genero">
             <select [formField]="libroForm.generoParaAgregar">
-              <option [value]="0" disabled>Selecciona un género</option>
+              <option value="" disabled>Selecciona un género</option>
               @for (genero of generosDisponibles(); track genero.id) {
                 <option [value]="genero.id">{{ genero.nombre }}</option>
               }

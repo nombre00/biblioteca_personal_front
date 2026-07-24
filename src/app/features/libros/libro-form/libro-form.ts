@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { form, FormField, submit, required, min } from '@angular/forms/signals';
+import { form, FormField, submit, required } from '@angular/forms/signals';
 
 import { LibroService } from '../libro.service';
 import { GeneroService } from '../genero.service';
@@ -17,9 +17,9 @@ interface LibroFormModel {
   isbn: string;
   portadaUrl: string;
   estado: EstadoLectura;
-  autorId: number;
+  autorId: string;
   generoIds: number[];
-  generoParaAgregar: number;
+  generoParaAgregar: string;
 }
 
 const MODELO_VACIO: LibroFormModel = {
@@ -27,9 +27,9 @@ const MODELO_VACIO: LibroFormModel = {
   isbn: '',
   portadaUrl: '',
   estado: 'POR_LEER',
-  autorId: 0,
+  autorId: '',
   generoIds: [],
-  generoParaAgregar: 0,
+  generoParaAgregar: '',
 };
 
 @Component({
@@ -70,7 +70,7 @@ export class LibroForm implements OnInit {
   protected readonly libroForm = form(this.model, (s) => {
     required(s.titulo, { message: 'El título es obligatorio' });
     required(s.estado, { message: 'El estado es obligatorio' });
-    min(s.autorId, 1, { message: 'Debes seleccionar un autor' });
+    required(s.autorId, { message: 'Debes seleccionar un autor' });
   });
 
   generosSeleccionados = computed(() => {
@@ -154,9 +154,9 @@ export class LibroForm implements OnInit {
           isbn: libro.isbn ?? '',
           portadaUrl: libro.portadaUrl ?? '',
           estado: libro.estado,
-          autorId: libro.autor.id,
+          autorId: String(libro.autor.id),
           generoIds: libro.generos.map((g) => g.id!),
-          generoParaAgregar: 0,
+          generoParaAgregar: '',
         });
         this.cargandoLibro.set(false);
       },
@@ -168,12 +168,13 @@ export class LibroForm implements OnInit {
   }
 
   agregarGenero(): void {
-    const id = this.model().generoParaAgregar;
-    if (!id) return;
+    const idStr = this.model().generoParaAgregar;
+    if (!idStr) return;
+    const id = Number(idStr);
     this.model.update((m) => ({
       ...m,
       generoIds: [...m.generoIds, id],
-      generoParaAgregar: 0,
+      generoParaAgregar: '',
     }));
   }
 
@@ -224,7 +225,7 @@ export class LibroForm implements OnInit {
         isbn: m.isbn.trim() ? m.isbn.trim() : undefined,
         portadaUrl: m.portadaUrl.trim() ? m.portadaUrl.trim() : undefined,
         estado: m.estado,
-        autorId: m.autorId,
+        autorId: Number(m.autorId),
         generoIds: m.generoIds,
       };
 

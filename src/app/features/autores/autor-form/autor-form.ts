@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { form, FormField, submit, required, min } from '@angular/forms/signals';
+import { form, FormField, submit, required } from '@angular/forms/signals';
 
 import { AutorService } from '../autor.service';
 import { PaisService } from '../pais.service';
@@ -13,13 +13,13 @@ import { ErrorResponseDTO } from '../../../core/models/error-response';
 interface AutorFormModel {
   nombre: string;
   idioma: string;
-  paisId: number;
+  paisId: string;
 }
 
 const MODELO_VACIO: AutorFormModel = {
   nombre: '',
   idioma: '',
-  paisId: 0,
+  paisId: '',
 };
 
 @Component({
@@ -57,7 +57,7 @@ export class AutorForm implements OnInit {
 
   protected readonly autorForm = form(this.model, (s) => {
     required(s.nombre, { message: 'El nombre es obligatorio' });
-    min(s.paisId, 1, { message: 'Debes seleccionar un país' });
+    required(s.paisId, { message: 'Debes seleccionar un país' });
   });
 
   ngOnInit(): void {
@@ -114,7 +114,7 @@ export class AutorForm implements OnInit {
         this.model.set({
           nombre: autor.nombre,
           idioma: autor.idioma ?? '',
-          paisId: autor.pais.id!,
+          paisId: String(autor.pais.id!),
         });
         this.cargandoAutor.set(false);
       },
@@ -138,7 +138,7 @@ export class AutorForm implements OnInit {
     this.paisService.crear({ nombre }).subscribe({
       next: (creado) => {
         this.paises.update((lista) => [...lista, creado]);
-        this.model.update((m) => ({ ...m, paisId: creado.id! }));
+        this.model.update((m) => ({ ...m, paisId: String(creado.id!) }));
         this.nombrePaisNuevo.set('');
         this.creandoPais.set(false);
       },
@@ -160,7 +160,7 @@ export class AutorForm implements OnInit {
       const dto: AutorDTO = {
         nombre: m.nombre,
         idioma: m.idioma.trim() ? m.idioma.trim() : undefined,
-        paisId: m.paisId,
+        paisId: Number(m.paisId),
       };
 
       try {
