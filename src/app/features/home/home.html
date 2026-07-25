@@ -1,9 +1,35 @@
-<h2>Biblioteca</h2>
+<div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+  <h1 class="text-2xl font-serif font-semibold text-gray-800 mb-1">Mi biblioteca</h1>
+  <p class="text-sm text-gray-500 mb-8">Bienvenido de vuelta.</p>
 
-<nav>
-  <a routerLink="/libros">Ver mis libros</a>
-  <a routerLink="/libros/gestionar">Gestionar libros</a>
-  <a routerLink="/autores">Ver autores</a>
-  <a routerLink="/autores/gestionar">Gestionar autores</a>
-</nav>
-<h1 class="text-3xl font-bold underline"> hola </h1>
+  <!-- Accesos rápidos -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+    <a routerLink="/libros" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
+      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Ver mis libros</h3>
+      <p class="text-xs text-gray-500 mt-1">Explora tu colección completa</p>
+    </a>
+
+    <a routerLink="/libros/gestionar" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
+      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Gestionar libros</h3>
+      <p class="text-xs text-gray-500 mt-1">Agrega, edita o elimina libros</p>
+    </a>
+
+    <a routerLink="/autores" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
+      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Ver autores</h3>
+      <p class="text-xs text-gray-500 mt-1">Explora los autores registrados</p>
+    </a>
+
+    <a routerLink="/autores/gestionar" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
+      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Gestionar autores</h3>
+      <p class="text-xs text-gray-500 mt-1">Agrega, edita o elimina autores</p>
+    </a>
+  </div>
+
+  <!-- Placeholder de futuro dashboard de estadísticas -->
+  <div class="bg-white rounded-md shadow-sm p-8 border border-dashed border-gray-300">
+    <h3 class="text-xs font-semibold uppercase text-gray-400 mb-2">Estadísticas</h3>
+    <p class="text-gray-400 italic text-sm">
+      Próximamente: un panel con estadísticas de tu biblioteca (libros leídos por mes, géneros favoritos, países de tus autores, y más).
+    </p>
+  </div>
+</div>

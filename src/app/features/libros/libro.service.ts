@@ -15,6 +15,10 @@ export class LibroService {
     return this.http.get<LibroResponseDTO[]>(this.baseUrl);
   }
 
+  buscarPorAutor(autorId: number): Observable<LibroResponseDTO[]> {
+    return this.http.get<LibroResponseDTO[]>(`${this.baseUrl}/autor/${autorId}`);
+  }
+
   buscarConFiltros(filtro: LibroFiltroDTO): Observable<LibroResponseDTO[]> {
     let params = new HttpParams();
 

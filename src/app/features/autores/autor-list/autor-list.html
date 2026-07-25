@@ -1,18 +1,39 @@
-@if (cargando()) {
-  <p>Cargando autores...</p>
-} @else if (error()) {
-  <p class="error">{{ error() }}</p>
-} @else if (autores().length === 0) {
-  <p>Todavía no hay autores registrados.</p>
-} @else {
-  <ul class="autor-list">
-    @for (autor of autores(); track autor.id) {
-      <li>
-        <a [routerLink]="['/autores', autor.id]">{{ autor.nombre }}</a>
-        — {{ autor.pais.nombre }}
-      </li>
-    }
-  </ul>
-}
-
-<a routerLink="/autores/gestionar">Gestión de autores</a>
+<div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-serif font-semibold text-gray-800">Autores</h1>
+    <a routerLink="/autores/gestionar" class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+      Gestión de autores
+    </a>
+  </div>
+  @if (cargando()) {
+    <p class="text-gray-500">Cargando autores...</p>
+  } @else if (error()) {
+    <p class="text-red-600">{{ error() }}</p>
+  } @else if (autores().length === 0) {
+    <p class="text-gray-500">Todavía no hay autores registrados.</p>
+  } @else {
+    <p class="text-sm text-gray-500 mb-4">
+      {{ autores().length }} {{ autores().length === 1 ? 'autor' : 'autores' }}
+    </p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      @for (autor of autores(); track autor.id) {
+        <a [routerLink]="['/autores', autor.id]" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col items-center text-center">
+          @if (autor.retratoUrl) {
+            <img [src]="autor.retratoUrl" [alt]="autor.nombre" class="w-24 aspect-[3/4] object-cover rounded-md mb-3" />
+          } @else {
+            <div class="w-24 aspect-[3/4] flex items-center justify-center text-3xl font-serif font-semibold text-white rounded-md mb-3" [ngStyle]="{ 'background-color': colorPorPais(autor.pais.nombre) }">
+              {{ autor.nombre.charAt(0) }}
+            </div>
+          }
+          <h3 class="font-medium text-gray-800 group-hover:text-orange-500">
+            {{ autor.nombre }}
+          </h3>
+          <p class="text-xs text-gray-500 mt-1">{{ autor.pais.nombre }}</p>
+          @if (autor.idioma) {
+            <p class="text-xs text-gray-400 mt-0.5">{{ autor.idioma }}</p>
+          }
+        </a>
+      }
+    </div>
+  }
+</div>

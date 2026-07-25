@@ -5,6 +5,7 @@ export interface AutorDTO {
   nombre: string;
   idioma?: string;
   paisId: number;
+  retratoUrl?: string;
 }
 
 // Lo que se recibe con detalle completo
@@ -13,6 +14,7 @@ export interface AutorResponseDTO {
   nombre: string;
   idioma: string;
   pais: PaisDTO;
+  retratoUrl?: string;
 }
 
 // Versión resumida/aplanada

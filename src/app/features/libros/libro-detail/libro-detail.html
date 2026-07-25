@@ -1,33 +1,110 @@
 @if (cargando()) {
-  <p>Cargando libro...</p>
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-gray-500">Cargando libro...</p>
+  </div>
 } @else if (error()) {
-  <p class="error">{{ error() }}</p>
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-red-600">{{ error() }}</p>
+  </div>
 } @else if (libro(); as l) {
-  <div class="libro-detail">
-    @if (l.portadaUrl) {
-      <img [src]="l.portadaUrl" [alt]="l.titulo" class="portada" />
-    } @else {
-      <div class="portada portada-placeholder">Sin portada</div>
-    }
+  <div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+    <a routerLink="/libros" class="text-sm text-gray-500 hover:text-orange-500">
+      &larr; Volver a mi biblioteca
+    </a>
 
-    <div class="info">
-      <h2>{{ l.titulo }}</h2>
-
-      <p>
-        Autor:
-        <a [routerLink]="['/autores', l.autor.id]">{{ l.autor.nombre }}</a>
-      </p>
-
-      <p>Géneros: {{ nombresGeneros(l) }}</p>
-      <p>Estado: {{ l.estado }}</p>
-      @if (l.isbn) {
-        <p>ISBN: {{ l.isbn }}</p>
+    <div class="mt-4 bg-white rounded-md shadow-sm p-8 flex gap-10 items-start">
+      <!-- Portada -->
+      @if (l.portadaUrl) {
+        <img
+          [src]="l.portadaUrl"
+          [alt]="l.titulo"
+          class="w-[clamp(220px,25vw,480px)] shrink-0 aspect-[2/3] object-cover rounded-md shadow-md"
+        />
+      } @else {
+        <div class="w-[clamp(220px,25vw,480px)] shrink-0 aspect-[2/3] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-14 h-14 text-gray-300">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25a8.987 8.987 0 0 0-3-.512c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
+          </svg>
+        </div>
       }
 
-      <section class="resumen">
-        <h3>Resumen</h3>
-        <p class="placeholder">Este libro todavía no tiene resumen disponible.</p>
-      </section>
+      <!-- Info -->
+      <div class="flex-1">
+        <h1 class="text-3xl font-serif font-semibold text-gray-800">{{ l.titulo }}</h1>
+
+        <p class="mt-2 text-base text-gray-600">
+          por
+          <a [routerLink]="['/autores', l.autor.id]" class="font-medium text-gray-700 hover:text-orange-500">
+            {{ l.autor.nombre }}
+          </a>
+        </p>
+
+        <span
+          class="mt-4 inline-block w-fit text-[10px] uppercase font-medium px-2 py-0.5 rounded-full"
+          [ngClass]="{
+            'bg-green-100 text-green-700': l.estado === 'LEIDO',
+            'bg-blue-100 text-blue-700': l.estado === 'LEYENDO',
+            'bg-gray-200 text-gray-600': l.estado === 'POR_LEER'
+          }"
+        >
+          {{ l.estado }}
+        </span>
+
+        @if (l.generos.length) {
+          <div class="mt-6">
+            <h3 class="text-xs font-semibold uppercase text-gray-400 mb-2">Géneros</h3>
+            <div class="flex flex-wrap gap-2">
+              @for (genero of l.generos; track genero.id) {
+                <span class="bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs">
+                  {{ genero.nombre }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (l.isbn) {
+          <p class="mt-4 text-xs text-gray-400">ISBN: {{ l.isbn }}</p>
+        }
+
+        <section class="mt-6 border-t border-gray-100 pt-4">
+          <h3 class="text-xs font-semibold uppercase text-gray-400 mb-2">Resumen</h3>
+          <p class="text-gray-400 italic text-sm">
+            Este libro todavía no tiene resumen disponible.
+          </p>
+        </section>
+      </div>
     </div>
+
+    <!-- Otros libros del autor -->
+      @if (otrosLibrosAutor().length > 0) {
+        <div class="mt-8">
+          <h3 class="text-sm font-semibold uppercase text-gray-500 mb-4">
+            Más de {{ l.autor.nombre }}
+          </h3>
+          <div class="flex flex-wrap gap-6">
+            @for (otro of otrosLibrosAutor(); track otro.id) {
+              <a [routerLink]="['/libros', otro.id]" class="group w-32 flex flex-col">
+                @if (otro.portadaUrl) {
+                  <img
+                    [src]="otro.portadaUrl"
+                    [alt]="otro.titulo"
+                    class="w-32 aspect-[2/3] object-cover rounded-md shadow-sm group-hover:shadow-md transition-shadow"
+                  />
+                } @else {
+                  <div class="w-32 aspect-[2/3] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-gray-300">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25a8.987 8.987 0 0 0-3-.512c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
+                    </svg>
+                  </div>
+                }
+                <p class="mt-2 text-xs text-gray-600 group-hover:text-orange-500 line-clamp-2">
+                  {{ otro.titulo }}
+                </p>
+              </a>
+            }
+          </div>
+        </div>
+      }
   </div>
 }
