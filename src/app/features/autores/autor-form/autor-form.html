@@ -1,90 +1,170 @@
 @if (cargando()) {
-  <p>Cargando datos...</p>
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-gray-500">Cargando datos...</p>
+  </div>
 } @else if (errorCarga()) {
-  <p class="error">{{ errorCarga() }}</p>
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-red-600">{{ errorCarga() }}</p>
+  </div>
 } @else {
-  <h2>Gestionar autores</h2>
+  <div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+    <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-6">Gestionar autores</h2>
 
-  <label>
-    Autor a editar
-    <select
-      [value]="autorSeleccionadoId()"
-      (change)="onSeleccionarAutor($any($event.target).value)"
-    >
-      <option [value]="0">-- Nuevo autor --</option>
-      @for (autor of autores(); track autor.id) {
-        <option [value]="autor.id">{{ autor.nombre }}</option>
-      }
-    </select>
-  </label>
-
-  @if (cargandoAutor()) {
-    <p>Cargando autor...</p>
-  } @else {
-    <form (submit)="onSubmit(); $event.preventDefault()">
-      <label>
-        Nombre
-        <input [formField]="autorForm.nombre" />
-        @if (autorForm.nombre().touched() && autorForm.nombre().errors().length) {
-          <span class="error">{{ autorForm.nombre().errors()[0].message }}</span>
+    <!-- Selector de autor a editar -->
+    <div class="bg-white rounded-md shadow-sm p-4 flex items-center gap-3 mb-6">
+      <label class="text-sm font-medium text-gray-600 whitespace-nowrap">
+        Autor a editar
+      </label>
+      <select
+        class="flex-1 max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+        [value]="autorSeleccionadoId()"
+        (change)="onSeleccionarAutor($any($event.target).value)"
+      >
+        <option [value]="0">-- Nuevo autor --</option>
+        @for (autor of autoresOrdenados(); track autor.id) {
+          <option [value]="autor.id">{{ autor.nombre }}</option>
         }
-      </label>
+      </select>
+    </div>
 
-      <label>
-        Idioma
-        <input [formField]="autorForm.idioma" />
-      </label>
+    @if (cargandoAutor()) {
+      <div class="bg-white rounded-md shadow-sm p-8 flex justify-center">
+        <p class="text-gray-500">Cargando autor...</p>
+      </div>
+    } @else {
+      <form (submit)="onSubmit(); $event.preventDefault()" class="bg-white rounded-md shadow-sm p-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-      <label>
-        País
-        <select [formField]="autorForm.paisId">
-          <option value="" disabled>Selecciona un país</option>
-          @for (pais of paises(); track pais.id) {
-            <option [value]="pais.id">{{ pais.nombre }}</option>
+        <!-- Columna izquierda: retrato grande -->
+        <div class="md:col-span-1">
+          <div class="md:sticky md:top-8">
+            @if (model().retratoUrl.trim()) {
+              <img
+                [src]="model().retratoUrl"
+                alt="Preview de retrato"
+                class="w-full aspect-[3/4] object-cover rounded-md shadow-md"
+              />
+            } @else {
+              <div class="w-full aspect-[3/4] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-16 h-16 text-gray-300">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              </div>
+            }
+
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-600 mb-1">URL de retrato</label>
+              <input
+                [formField]="autorForm.retratoUrl"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha: resto del form -->
+        <div class="md:col-span-2">
+          <!-- Nombre -->
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Nombre</label>
+            <input
+              [formField]="autorForm.nombre"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            />
+            @if (autorForm.nombre().touched() && autorForm.nombre().errors().length) {
+              <p class="text-red-600 text-xs mt-1">{{ autorForm.nombre().errors()[0].message }}</p>
+            }
+          </div>
+
+          <!-- Idioma + País -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Idioma</label>
+              <input
+                [formField]="autorForm.idioma"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">País</label>
+              <select
+                [formField]="autorForm.paisId"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              >
+                <option value="" disabled>Selecciona un país</option>
+                @for (pais of paises(); track pais.id) {
+                  <option [value]="pais.id">{{ pais.nombre }}</option>
+                }
+              </select>
+              @if (autorForm.paisId().touched() && autorForm.paisId().errors().length) {
+                <p class="text-red-600 text-xs mt-1">{{ autorForm.paisId().errors()[0].message }}</p>
+              }
+            </div>
+          </div>
+
+          <!-- Crear país nuevo -->
+          <div class="border-t border-gray-100 pt-4 mb-5">
+            <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">País nuevo</label>
+            <div class="flex gap-2 items-start">
+              <input
+                type="text"
+                placeholder="Nombre de un país nuevo"
+                [value]="nombrePaisNuevo()"
+                (input)="nombrePaisNuevo.set($any($event.target).value)"
+                class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+              <button
+                type="button"
+                (click)="crearPaisNuevo()"
+                [disabled]="creandoPais()"
+                class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {{ creandoPais() ? 'Creando...' : 'Crear país' }}
+              </button>
+            </div>
+            @if (errorPais()) {
+              <p class="text-red-600 text-xs mt-2">{{ errorPais() }}</p>
+            }
+          </div>
+
+          @if (errorEnvio()) {
+            <p class="text-red-600 text-sm mt-6">{{ errorEnvio() }}</p>
           }
-        </select>
-        @if (autorForm.paisId().touched() && autorForm.paisId().errors().length) {
-          <span class="error">{{ autorForm.paisId().errors()[0].message }}</span>
-        }
-      </label>
+          @if (mensajeExito()) {
+            <p class="text-green-600 text-sm mt-6">{{ mensajeExito() }}</p>
+          }
 
-      <div class="pais-nuevo">
-        <input
-          type="text"
-          placeholder="Nombre de un país nuevo"
-          [value]="nombrePaisNuevo()"
-          (input)="nombrePaisNuevo.set($any($event.target).value)"
-        />
-        <button type="button" (click)="crearPaisNuevo()" [disabled]="creandoPais()">
-          {{ creandoPais() ? 'Creando...' : 'Crear país' }}
-        </button>
-        @if (errorPais()) {
-          <p class="error">{{ errorPais() }}</p>
-        }
+          <!-- Acciones -->
+          <div class="mt-6 border-t border-gray-100 pt-6 flex gap-3">
+            <button
+              type="submit"
+              [disabled]="autorForm().invalid() || enviando()"
+              class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 disabled:opacity-50"
+            >
+              {{ enviando() ? 'Guardando...' : (autorSeleccionadoId() === 0 ? 'Crear autor' : 'Guardar cambios') }}
+            </button>
+
+            @if (autorSeleccionadoId() !== 0) {
+              <button
+                type="button"
+                (click)="eliminar()"
+                [disabled]="eliminando()"
+                class="rounded-md border border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium px-4 py-2 disabled:opacity-50"
+              >
+                {{ eliminando() ? 'Eliminando...' : 'Eliminar autor' }}
+              </button>
+            }
+          </div>
+
+          @if (errorEliminar()) {
+            <p class="text-red-600 text-sm mt-3">{{ errorEliminar() }}</p>
+          }
+        </div>
+        <!-- fin columna derecha -->
       </div>
-
-      @if (errorEnvio()) {
-        <p class="error">{{ errorEnvio() }}</p>
-      }
-      @if (mensajeExito()) {
-        <p class="exito">{{ mensajeExito() }}</p>
-      }
-
-      <div class="acciones">
-        <button type="submit" [disabled]="autorForm().invalid() || enviando()">
-          {{ enviando() ? 'Guardando...' : (autorSeleccionadoId() === 0 ? 'Crear autor' : 'Guardar cambios') }}
-        </button>
-
-        @if (autorSeleccionadoId() !== 0) {
-          <button type="button" (click)="eliminar()" [disabled]="eliminando()">
-            {{ eliminando() ? 'Eliminando...' : 'Eliminar autor' }}
-          </button>
-        }
-      </div>
-
-      @if (errorEliminar()) {
-        <p class="error">{{ errorEliminar() }}</p>
-      }
-    </form>
-  }
+      <!-- fin grid 3 columnas -->
+      </form>
+    }
+  </div>
 }

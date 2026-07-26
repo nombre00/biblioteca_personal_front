@@ -73,6 +73,10 @@ export class LibroForm implements OnInit {
     required(s.autorId, { message: 'Debes seleccionar un autor' });
   });
 
+  librosOrdenados = computed(() =>
+    [...this.libros()].sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'))
+  );
+
   generosSeleccionados = computed(() => {
     const ids = this.model().generoIds;
     return this.generosDisponiblesTodos().filter((g) => ids.includes(g.id!));

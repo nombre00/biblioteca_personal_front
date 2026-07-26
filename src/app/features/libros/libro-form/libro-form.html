@@ -1,133 +1,225 @@
 @if (cargando()) {
-  <p>Cargando datos...</p>
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-gray-500">Cargando datos...</p>
+  </div>
 } @else if (errorCarga()) {
-  <p class="error">{{ errorCarga() }}</p>
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-red-600">{{ errorCarga() }}</p>
+  </div>
 } @else {
-  <h2>Gestionar libros</h2>
+  <div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+    <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-6">Gestionar libros</h2>
 
-  <label>
-    Libro a editar
-    <select
-      [value]="libroSeleccionadoId()"
-      (change)="onSeleccionarLibro($any($event.target).value)"
-    >
-      <option [value]="0">-- Nuevo libro --</option>
-      @for (libro of libros(); track libro.id) {
-        <option [value]="libro.id">{{ libro.titulo }}</option>
-      }
-    </select>
-  </label>
-
-  @if (cargandoLibro()) {
-    <p>Cargando libro...</p>
-  } @else {
-    <form (submit)="onSubmit(); $event.preventDefault()">
-      <label>
-        Título
-        <input [formField]="libroForm.titulo" />
-        @if (libroForm.titulo().touched() && libroForm.titulo().errors().length) {
-          <span class="error">{{ libroForm.titulo().errors()[0].message }}</span>
+    <!-- Selector de libro a editar -->
+    <div class="bg-white rounded-md shadow-sm p-4 flex items-center gap-3 mb-6">
+      <label class="text-sm font-medium text-gray-600 whitespace-nowrap">
+        Libro a editar
+      </label>
+      <select
+        class="flex-1 max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+        [value]="libroSeleccionadoId()"
+        (change)="onSeleccionarLibro($any($event.target).value)"
+      >
+        <option [value]="0">-- Nuevo libro --</option>
+        @for (libro of librosOrdenados(); track libro.id) {
+          <option [value]="libro.id">{{ libro.titulo }}</option>
         }
-      </label>
+      </select>
+    </div>
 
-      <label>
-        ISBN
-        <input [formField]="libroForm.isbn" />
-      </label>
+    @if (cargandoLibro()) {
+      <div class="bg-white rounded-md shadow-sm p-8 flex justify-center">
+        <p class="text-gray-500">Cargando libro...</p>
+      </div>
+    } @else {
+      <form (submit)="onSubmit(); $event.preventDefault()" class="bg-white rounded-md shadow-sm p-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-      <label>
-        URL de portada
-        <input [formField]="libroForm.portadaUrl" />
-      </label>
-
-      <label>
-        Estado
-        <select [formField]="libroForm.estado">
-          <option value="POR_LEER">Por leer</option>
-          <option value="LEYENDO">Leyendo</option>
-          <option value="LEIDO">Leído</option>
-        </select>
-      </label>
-
-      <label>
-        Autor
-        <select [formField]="libroForm.autorId">
-          <option value="" disabled>Selecciona un autor</option>
-          @for (autor of autores(); track autor.id) {
-            <option [value]="autor.id">{{ autor.nombre }} ({{ autor.pais.nombre }})</option>
-          }
-        </select>
-        @if (libroForm.autorId().touched() && libroForm.autorId().errors().length) {
-          <span class="error">{{ libroForm.autorId().errors()[0].message }}</span>
-        }
-      </label>
-
-      <fieldset>
-        <legend>Géneros</legend>
-
-        @if (generosSeleccionados().length === 0) {
-          <p>Ningún género seleccionado todavía.</p>
-        } @else {
-          <ul class="generos-seleccionados">
-            @for (genero of generosSeleccionados(); track genero.id) {
-              <li>
-                {{ genero.nombre }}
-                <button type="button" (click)="quitarGenero(genero.id!)">Quitar</button>
-              </li>
+        <!-- Columna izquierda: portada grande -->
+        <div class="md:col-span-1">
+          <div class="md:sticky md:top-8">
+            @if (model().portadaUrl.trim()) {
+              <img
+                [src]="model().portadaUrl"
+                alt="Preview de portada"
+                class="w-full aspect-[2/3] object-cover rounded-md shadow-md"
+              />
+            } @else {
+              <div class="w-full aspect-[2/3] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-16 h-16 text-gray-300">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25a8.987 8.987 0 0 0-3-.512c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
+                </svg>
+              </div>
             }
-          </ul>
-        }
 
-        @if (generosDisponibles().length > 0) {
-          <div class="agregar-genero">
-            <select [formField]="libroForm.generoParaAgregar">
-              <option value="" disabled>Selecciona un género</option>
-              @for (genero of generosDisponibles(); track genero.id) {
-                <option [value]="genero.id">{{ genero.nombre }}</option>
-              }
-            </select>
-            <button type="button" (click)="agregarGenero()">Agregar</button>
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-600 mb-1">URL de portada</label>
+              <input
+                [formField]="libroForm.portadaUrl"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
           </div>
-        }
+        </div>
 
-        <div class="genero-nuevo">
+        <!-- Columna derecha: resto del form -->
+        <div class="md:col-span-2">
+        <!-- Título -->
+        <div class="mb-5">
+          <label class="block text-sm font-medium text-gray-600 mb-1">Título</label>
           <input
-            type="text"
-            placeholder="Nombre de un género nuevo"
-            [value]="nombreGeneroNuevo()"
-            (input)="nombreGeneroNuevo.set($any($event.target).value)"
+            [formField]="libroForm.titulo"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
           />
-          <button type="button" (click)="crearGeneroNuevo()" [disabled]="creandoGenero()">
-            {{ creandoGenero() ? 'Creando...' : 'Crear género' }}
-          </button>
-          @if (errorGenero()) {
-            <p class="error">{{ errorGenero() }}</p>
+          @if (libroForm.titulo().touched() && libroForm.titulo().errors().length) {
+            <p class="text-red-600 text-xs mt-1">{{ libroForm.titulo().errors()[0].message }}</p>
           }
         </div>
-      </fieldset>
 
-      @if (errorEnvio()) {
-        <p class="error">{{ errorEnvio() }}</p>
-      }
-      @if (mensajeExito()) {
-        <p class="exito">{{ mensajeExito() }}</p>
-      }
+        <!-- ISBN -->
+        <div class="mb-5">
+          <label class="block text-sm font-medium text-gray-600 mb-1">ISBN</label>
+          <input
+            [formField]="libroForm.isbn"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+        </div>
 
-      <div class="acciones">
-        <button type="submit" [disabled]="libroForm().invalid() || enviando()">
-          {{ enviando() ? 'Guardando...' : (libroSeleccionadoId() === 0 ? 'Crear libro' : 'Guardar cambios') }}
-        </button>
+        <!-- Estado + Autor -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+            <select
+              [formField]="libroForm.estado"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              <option value="POR_LEER">Por leer</option>
+              <option value="LEYENDO">Leyendo</option>
+              <option value="LEIDO">Leído</option>
+            </select>
+          </div>
 
-        @if (libroSeleccionadoId() !== 0) {
-          <button type="button" (click)="eliminar()" [disabled]="eliminando()">
-            {{ eliminando() ? 'Eliminando...' : 'Eliminar libro' }}
-          </button>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Autor</label>
+            <select
+              [formField]="libroForm.autorId"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              <option value="" disabled>Selecciona un autor</option>
+              @for (autor of autores(); track autor.id) {
+                <option [value]="autor.id">{{ autor.nombre }} ({{ autor.pais.nombre }})</option>
+              }
+            </select>
+            @if (libroForm.autorId().touched() && libroForm.autorId().errors().length) {
+              <p class="text-red-600 text-xs mt-1">{{ libroForm.autorId().errors()[0].message }}</p>
+            }
+          </div>
+        </div>
+
+        <!-- Géneros -->
+        <fieldset class="mt-6 border-t border-gray-100 pt-4">
+          <legend class="text-xs font-semibold uppercase text-gray-400 mb-3">Géneros</legend>
+
+          @if (generosSeleccionados().length === 0) {
+            <p class="text-sm text-gray-400 italic mb-3">Ningún género seleccionado todavía.</p>
+          } @else {
+            <div class="flex flex-wrap gap-2 mb-4">
+              @for (genero of generosSeleccionados(); track genero.id) {
+                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full pl-3 pr-1 py-0.5 text-xs">
+                  {{ genero.nombre }}
+                  <button
+                    type="button"
+                    (click)="quitarGenero(genero.id!)"
+                    class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500"
+                    aria-label="Quitar género"
+                  >
+                    ×
+                  </button>
+                </span>
+              }
+            </div>
+          }
+
+          @if (generosDisponibles().length > 0) {
+            <div class="flex gap-2 mb-4">
+              <select
+                [formField]="libroForm.generoParaAgregar"
+                class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              >
+                <option value="" disabled>Selecciona un género</option>
+                @for (genero of generosDisponibles(); track genero.id) {
+                  <option [value]="genero.id">{{ genero.nombre }}</option>
+                }
+              </select>
+              <button
+                type="button"
+                (click)="agregarGenero()"
+                class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Agregar
+              </button>
+            </div>
+          }
+
+          <div class="flex gap-2 items-start">
+            <input
+              type="text"
+              placeholder="Nombre de un género nuevo"
+              [value]="nombreGeneroNuevo()"
+              (input)="nombreGeneroNuevo.set($any($event.target).value)"
+              class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            />
+            <button
+              type="button"
+              (click)="crearGeneroNuevo()"
+              [disabled]="creandoGenero()"
+              class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            >
+              {{ creandoGenero() ? 'Creando...' : 'Crear género' }}
+            </button>
+          </div>
+          @if (errorGenero()) {
+            <p class="text-red-600 text-xs mt-2">{{ errorGenero() }}</p>
+          }
+        </fieldset>
+
+        @if (errorEnvio()) {
+          <p class="text-red-600 text-sm mt-6">{{ errorEnvio() }}</p>
         }
-      </div>
+        @if (mensajeExito()) {
+          <p class="text-green-600 text-sm mt-6">{{ mensajeExito() }}</p>
+        }
 
-      @if (errorEliminar()) {
-        <p class="error">{{ errorEliminar() }}</p>
-      }
-    </form>
-  }
+        <!-- Acciones -->
+        <div class="mt-6 border-t border-gray-100 pt-6 flex gap-3">
+          <button
+            type="submit"
+            [disabled]="libroForm().invalid() || enviando()"
+            class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 disabled:opacity-50"
+          >
+            {{ enviando() ? 'Guardando...' : (libroSeleccionadoId() === 0 ? 'Crear libro' : 'Guardar cambios') }}
+          </button>
+
+          @if (libroSeleccionadoId() !== 0) {
+            <button
+              type="button"
+              (click)="eliminar()"
+              [disabled]="eliminando()"
+              class="rounded-md border border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium px-4 py-2 disabled:opacity-50"
+            >
+              {{ eliminando() ? 'Eliminando...' : 'Eliminar libro' }}
+            </button>
+          }
+        </div>
+
+        @if (errorEliminar()) {
+          <p class="text-red-600 text-sm mt-3">{{ errorEliminar() }}</p>
+        }
+        </div>
+        <!-- fin columna derecha -->
+      </div>
+      <!-- fin grid 3 columnas -->
+      </form>
+    }
+  </div>
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { form, FormField, submit, required } from '@angular/forms/signals';
@@ -14,12 +14,14 @@ interface AutorFormModel {
   nombre: string;
   idioma: string;
   paisId: string;
+  retratoUrl: string;
 }
 
 const MODELO_VACIO: AutorFormModel = {
   nombre: '',
   idioma: '',
   paisId: '',
+  retratoUrl: '',
 };
 
 @Component({
@@ -59,6 +61,10 @@ export class AutorForm implements OnInit {
     required(s.nombre, { message: 'El nombre es obligatorio' });
     required(s.paisId, { message: 'Debes seleccionar un país' });
   });
+
+  autoresOrdenados = computed(() =>
+    [...this.autores()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+  );
 
   ngOnInit(): void {
     Promise.all([this.cargarAutores(), this.cargarPaises()]).then(() => {
@@ -115,6 +121,7 @@ export class AutorForm implements OnInit {
           nombre: autor.nombre,
           idioma: autor.idioma ?? '',
           paisId: String(autor.pais.id!),
+          retratoUrl: autor.retratoUrl ?? '',
         });
         this.cargandoAutor.set(false);
       },
@@ -161,6 +168,7 @@ export class AutorForm implements OnInit {
         nombre: m.nombre,
         idioma: m.idioma.trim() ? m.idioma.trim() : undefined,
         paisId: Number(m.paisId),
+        retratoUrl: m.retratoUrl.trim() ? m.retratoUrl.trim() : undefined,
       };
 
       try {
