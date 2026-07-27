@@ -8,3 +8,9 @@ export interface RitmoLecturaDTO {
   cantidadAniosDistintos: number;
   promedioLibrosPorAnio: number | null;
 }
+
+export interface ConteoDobleDTO {
+  etiqueta: string;
+  cantidadTotal: number | null;
+  cantidadLeidos: number;
+}
