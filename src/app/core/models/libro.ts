@@ -10,6 +10,10 @@ export interface LibroDTO {
   estado: EstadoLectura;
   autorId: number;
   generoIds?: number[];
+  anioPublicacion?: number;
+  anioLectura?: number;
+  fechaInicio?: string;
+  fechaTermino?: string;
 }
 
 export interface LibroFiltroDTO {
@@ -28,4 +32,8 @@ export interface LibroResponseDTO {
   estado: EstadoLectura;
   autor: AutorResumenDTO;
   generos: GeneroDTO[];
+  anioPublicacion?: number;
+  anioLectura?: number;
+  fechaInicio?: string;
+  fechaTermino?: string;
 }

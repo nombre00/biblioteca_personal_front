@@ -7,10 +7,11 @@ import { PaisService } from '../../autores/pais.service';
 import { LibroResponseDTO, LibroFiltroDTO, EstadoLectura } from '../../../core/models/libro';
 import { GeneroDTO } from '../../../core/models/genero';
 import { PaisDTO } from '../../../core/models/pais';
+import { PortadaLibro } from '../../../shared/components/portada-libro/portada-libro';
 
 @Component({
   selector: 'app-libro-list',
-  imports: [RouterLink, NgClass],
+  imports: [RouterLink, NgClass, PortadaLibro],
   templateUrl: './libro-list.html',
   styleUrl: './libro-list.scss',
 })

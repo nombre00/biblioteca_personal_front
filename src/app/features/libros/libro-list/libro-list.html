@@ -117,19 +117,8 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-8">
           @for (libro of libros(); track libro.id) {
             <a [routerLink]="['/libros', libro.id]" class="group flex flex-col">
-              @if (libro.portadaUrl) {
-                <img
-                  [src]="libro.portadaUrl"
-                  [alt]="libro.titulo"
-                  class="w-full aspect-[2/3] object-cover rounded-md shadow-md group-hover:shadow-lg transition-shadow"
-                />
-              } @else {
-                <div class="w-full aspect-[2/3] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-10 h-10 text-gray-300">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25a8.987 8.987 0 0 0-3-.512c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
-                  </svg>
-                </div>
-              }
+              
+              <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" />
 
               <h3 class="mt-3 text-sm font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
                 {{ libro.titulo }}

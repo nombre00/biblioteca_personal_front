@@ -15,6 +15,10 @@ interface AutorFormModel {
   idioma: string;
   paisId: string;
   retratoUrl: string;
+  fechaNacimiento: string;
+  anioNacimientoAprox: string;
+  fechaDefuncion: string;
+  anioDefuncionAprox: string;
 }
 
 const MODELO_VACIO: AutorFormModel = {
@@ -22,6 +26,10 @@ const MODELO_VACIO: AutorFormModel = {
   idioma: '',
   paisId: '',
   retratoUrl: '',
+  fechaNacimiento: '',
+  anioNacimientoAprox: '',
+  fechaDefuncion: '',
+  anioDefuncionAprox: '',
 };
 
 @Component({
@@ -54,6 +62,10 @@ export class AutorForm implements OnInit {
   nombrePaisNuevo = signal('');
   errorPais = signal<string | null>(null);
   creandoPais = signal(false);
+
+  // Modo de ingreso para fechas de nacimiento y defunción
+  modoNacimiento = signal<'exacta' | 'aproximado'>('exacta');
+  modoDefuncion = signal<'exacta' | 'aproximado'>('exacta');
 
   protected readonly model = signal<AutorFormModel>({ ...MODELO_VACIO });
 
@@ -111,6 +123,8 @@ export class AutorForm implements OnInit {
 
     if (id === 0) {
       this.model.set({ ...MODELO_VACIO });
+      this.modoNacimiento.set('exacta');
+      this.modoDefuncion.set('exacta');
       return;
     }
 
@@ -122,7 +136,15 @@ export class AutorForm implements OnInit {
           idioma: autor.idioma ?? '',
           paisId: String(autor.pais.id!),
           retratoUrl: autor.retratoUrl ?? '',
+          fechaNacimiento: autor.fechaNacimiento ?? '',
+          anioNacimientoAprox:
+            autor.anioNacimientoAprox != null ? String(autor.anioNacimientoAprox) : '',
+          fechaDefuncion: autor.fechaDefuncion ?? '',
+          anioDefuncionAprox:
+            autor.anioDefuncionAprox != null ? String(autor.anioDefuncionAprox) : '',
         });
+        this.modoNacimiento.set(autor.anioNacimientoAprox != null ? 'aproximado' : 'exacta');
+        this.modoDefuncion.set(autor.anioDefuncionAprox != null ? 'aproximado' : 'exacta');
         this.cargandoAutor.set(false);
       },
       error: () => {
@@ -130,6 +152,24 @@ export class AutorForm implements OnInit {
         this.cargandoAutor.set(false);
       },
     });
+  }
+
+  cambiarModoNacimiento(modo: 'exacta' | 'aproximado'): void {
+    this.modoNacimiento.set(modo);
+    this.model.update((m) => ({
+      ...m,
+      fechaNacimiento: modo === 'exacta' ? m.fechaNacimiento : '',
+      anioNacimientoAprox: modo === 'aproximado' ? m.anioNacimientoAprox : '',
+    }));
+  }
+
+  cambiarModoDefuncion(modo: 'exacta' | 'aproximado'): void {
+    this.modoDefuncion.set(modo);
+    this.model.update((m) => ({
+      ...m,
+      fechaDefuncion: modo === 'exacta' ? m.fechaDefuncion : '',
+      anioDefuncionAprox: modo === 'aproximado' ? m.anioDefuncionAprox : '',
+    }));
   }
 
   crearPaisNuevo(): void {
@@ -169,6 +209,14 @@ export class AutorForm implements OnInit {
         idioma: m.idioma.trim() ? m.idioma.trim() : undefined,
         paisId: Number(m.paisId),
         retratoUrl: m.retratoUrl.trim() ? m.retratoUrl.trim() : undefined,
+        fechaNacimiento: m.fechaNacimiento.trim() ? m.fechaNacimiento.trim() : undefined,
+        anioNacimientoAprox: m.anioNacimientoAprox.trim()
+          ? Number(m.anioNacimientoAprox.trim())
+          : undefined,
+        fechaDefuncion: m.fechaDefuncion.trim() ? m.fechaDefuncion.trim() : undefined,
+        anioDefuncionAprox: m.anioDefuncionAprox.trim()
+          ? Number(m.anioDefuncionAprox.trim())
+          : undefined,
       };
 
       try {

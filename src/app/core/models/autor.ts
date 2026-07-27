@@ -6,6 +6,10 @@ export interface AutorDTO {
   idioma?: string;
   paisId: number;
   retratoUrl?: string;
+  fechaNacimiento?: string;
+  anioNacimientoAprox?: number;
+  fechaDefuncion?: string;
+  anioDefuncionAprox?: number;
 }
 
 // Lo que se recibe con detalle completo
@@ -15,6 +19,10 @@ export interface AutorResponseDTO {
   idioma: string;
   pais: PaisDTO;
   retratoUrl?: string;
+  fechaNacimiento?: string;
+  anioNacimientoAprox?: number;
+  fechaDefuncion?: string;
+  anioDefuncionAprox?: number;
 }
 
 // Versión resumida/aplanada

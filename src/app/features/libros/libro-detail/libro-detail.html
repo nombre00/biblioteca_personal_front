@@ -37,6 +37,11 @@
           <a [routerLink]="['/autores', l.autor.id]" class="font-medium text-gray-700 hover:text-orange-500">
             {{ l.autor.nombre }}
           </a>
+          @if (l.anioPublicacion != null) {
+            <span class="text-gray-400">
+              ({{ l.anioPublicacion < 0 ? (-l.anioPublicacion) + ' a.C.' : l.anioPublicacion }})
+            </span>
+          }
         </p>
 
         <span

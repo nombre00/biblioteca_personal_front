@@ -7,6 +7,7 @@ import { LibroForm } from './features/libros/libro-form/libro-form';
 import { AutorList } from './features/autores/autor-list/autor-list';
 import { AutorDetail } from './features/autores/autor-detail/autor-detail';
 import { AutorForm } from './features/autores/autor-form/autor-form';
+import { Dashboard } from './features/estadisticas/dashboard/dashboard';
 import { authGuard } from './core/guards/auth-guard';
 
 export const routes: Routes = [
@@ -18,4 +19,5 @@ export const routes: Routes = [
   { path: 'autores', component: AutorList, canActivate: [authGuard] },
   { path: 'autores/gestionar', component: AutorForm, canActivate: [authGuard] },
   { path: 'autores/:id', component: AutorDetail, canActivate: [authGuard] },
+  { path: 'estadisticas', component: Dashboard, canActivate: [authGuard] },
 ];

@@ -20,6 +20,10 @@ interface LibroFormModel {
   autorId: string;
   generoIds: number[];
   generoParaAgregar: string;
+  anioPublicacion: string;
+  anioLectura: string;
+  fechaInicio: string;
+  fechaTermino: string;
 }
 
 const MODELO_VACIO: LibroFormModel = {
@@ -30,6 +34,10 @@ const MODELO_VACIO: LibroFormModel = {
   autorId: '',
   generoIds: [],
   generoParaAgregar: '',
+  anioPublicacion: '',
+  anioLectura: '',
+  fechaInicio: '',
+  fechaTermino: '',
 };
 
 @Component({
@@ -161,6 +169,10 @@ export class LibroForm implements OnInit {
           autorId: String(libro.autor.id),
           generoIds: libro.generos.map((g) => g.id!),
           generoParaAgregar: '',
+          anioPublicacion: libro.anioPublicacion != null ? String(libro.anioPublicacion) : '',
+          anioLectura: libro.anioLectura != null ? String(libro.anioLectura) : '',
+          fechaInicio: libro.fechaInicio ?? '',
+          fechaTermino: libro.fechaTermino ?? '',
         });
         this.cargandoLibro.set(false);
       },
@@ -231,6 +243,10 @@ export class LibroForm implements OnInit {
         estado: m.estado,
         autorId: Number(m.autorId),
         generoIds: m.generoIds,
+        anioPublicacion: m.anioPublicacion.trim() ? Number(m.anioPublicacion.trim()) : undefined,
+        anioLectura: m.anioLectura.trim() ? Number(m.anioLectura.trim()) : undefined,
+        fechaInicio: m.fechaInicio.trim() ? m.fechaInicio.trim() : undefined,
+        fechaTermino: m.fechaTermino.trim() ? m.fechaTermino.trim() : undefined,
       };
 
       try {

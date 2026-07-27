@@ -35,6 +35,24 @@
         <p class="mt-2 text-base text-gray-600">{{ a.pais.nombre }}</p>
         <p class="text-sm text-gray-500">{{ a.idioma }}</p>
 
+        @if (a.fechaNacimiento || a.anioNacimientoAprox != null || a.fechaDefuncion || a.anioDefuncionAprox != null) {
+          <p class="mt-2 text-sm text-gray-400">
+            @if (a.fechaNacimiento) {
+              {{ a.fechaNacimiento.split('-')[0] }}
+            } @else if (a.anioNacimientoAprox != null) {
+              {{ a.anioNacimientoAprox < 0 ? (-a.anioNacimientoAprox) + ' a.C.' : a.anioNacimientoAprox }}
+            } @else {
+              ?
+            }
+            &ndash;
+            @if (a.fechaDefuncion) {
+              {{ a.fechaDefuncion.split('-')[0] }}
+            } @else if (a.anioDefuncionAprox != null) {
+              {{ a.anioDefuncionAprox < 0 ? (-a.anioDefuncionAprox) + ' a.C.' : a.anioDefuncionAprox }}
+            }
+          </p>
+        }
+
         <section class="mt-6 border-t border-gray-100 pt-4">
           <h3 class="text-xs font-semibold uppercase text-gray-400 mb-2">Biografía</h3>
           <p class="text-gray-400 italic text-sm">

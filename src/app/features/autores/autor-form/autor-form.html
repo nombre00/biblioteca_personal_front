@@ -128,6 +128,120 @@
             }
           </div>
 
+          <!-- Nacimiento -->
+          <div class="border-t border-gray-100 pt-4 mb-5">
+            <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">
+              Nacimiento
+            </label>
+
+            <div class="flex gap-2 mb-3">
+              <button
+                type="button"
+                (click)="cambiarModoNacimiento('exacta')"
+                class="rounded-md border px-3 py-1 text-xs font-medium"
+                [class.bg-orange-50]="modoNacimiento() === 'exacta'"
+                [class.border-orange-300]="modoNacimiento() === 'exacta'"
+                [class.text-orange-600]="modoNacimiento() === 'exacta'"
+                [class.border-gray-300]="modoNacimiento() !== 'exacta'"
+                [class.text-gray-500]="modoNacimiento() !== 'exacta'"
+              >
+                Fecha exacta
+              </button>
+              <button
+                type="button"
+                (click)="cambiarModoNacimiento('aproximado')"
+                class="rounded-md border px-3 py-1 text-xs font-medium"
+                [class.bg-orange-50]="modoNacimiento() === 'aproximado'"
+                [class.border-orange-300]="modoNacimiento() === 'aproximado'"
+                [class.text-orange-600]="modoNacimiento() === 'aproximado'"
+                [class.border-gray-300]="modoNacimiento() !== 'aproximado'"
+                [class.text-gray-500]="modoNacimiento() !== 'aproximado'"
+              >
+                Año aproximado
+              </button>
+            </div>
+
+            @if (modoNacimiento() === 'exacta') {
+              <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">Fecha de nacimiento</label>
+                <input
+                  type="date"
+                  [formField]="autorForm.fechaNacimiento"
+                  class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                />
+              </div>
+            } @else {
+              <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">
+                  Año de nacimiento aproximado
+                </label>
+                <input
+                  type="number"
+                  placeholder="Usa negativos para a.C., ej. -106"
+                  [formField]="autorForm.anioNacimientoAprox"
+                  class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                />
+              </div>
+            }
+          </div>
+
+          <!-- Defunción -->
+          <div class="border-t border-gray-100 pt-4 mb-5">
+            <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">
+              Defunción
+            </label>
+
+            <div class="flex gap-2 mb-3">
+              <button
+                type="button"
+                (click)="cambiarModoDefuncion('exacta')"
+                class="rounded-md border px-3 py-1 text-xs font-medium"
+                [class.bg-orange-50]="modoDefuncion() === 'exacta'"
+                [class.border-orange-300]="modoDefuncion() === 'exacta'"
+                [class.text-orange-600]="modoDefuncion() === 'exacta'"
+                [class.border-gray-300]="modoDefuncion() !== 'exacta'"
+                [class.text-gray-500]="modoDefuncion() !== 'exacta'"
+              >
+                Fecha exacta
+              </button>
+              <button
+                type="button"
+                (click)="cambiarModoDefuncion('aproximado')"
+                class="rounded-md border px-3 py-1 text-xs font-medium"
+                [class.bg-orange-50]="modoDefuncion() === 'aproximado'"
+                [class.border-orange-300]="modoDefuncion() === 'aproximado'"
+                [class.text-orange-600]="modoDefuncion() === 'aproximado'"
+                [class.border-gray-300]="modoDefuncion() !== 'aproximado'"
+                [class.text-gray-500]="modoDefuncion() !== 'aproximado'"
+              >
+                Año aproximado
+              </button>
+            </div>
+
+            @if (modoDefuncion() === 'exacta') {
+              <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">Fecha de defunción</label>
+                <input
+                  type="date"
+                  [formField]="autorForm.fechaDefuncion"
+                  class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                />
+              </div>
+            } @else {
+              <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">
+                  Año de defunción aproximado
+                </label>
+                <input
+                  type="number"
+                  placeholder="Usa negativos para a.C., ej. -43"
+                  [formField]="autorForm.anioDefuncionAprox"
+                  class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                />
+              </div>
+            }
+          </div>
+
           @if (errorEnvio()) {
             <p class="text-red-600 text-sm mt-6">{{ errorEnvio() }}</p>
           }

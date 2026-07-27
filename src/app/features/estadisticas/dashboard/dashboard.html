@@ -1,0 +1,92 @@
+<div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+  <h1 class="text-2xl font-serif font-semibold text-gray-800 mb-1">Estadísticas</h1>
+  <p class="text-sm text-gray-500 mb-8">Un vistazo a tu biblioteca.</p>
+
+  @if (cargando()) {
+    <p class="text-gray-500">Cargando estadísticas...</p>
+  } @else if (error()) {
+    <p class="text-red-600">{{ error() }}</p>
+  } @else {
+
+    <!-- Ritmo de lectura: 3 números destacados -->
+    @if (ritmoLectura(); as ritmo) {
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        <div class="bg-white rounded-md shadow-sm p-5 text-center">
+          <p class="text-3xl font-serif font-semibold text-gray-800">{{ ritmo.totalLibrosConAnio }}</p>
+          <p class="text-xs text-gray-500 mt-1">Libros con año registrado</p>
+        </div>
+        <div class="bg-white rounded-md shadow-sm p-5 text-center">
+          <p class="text-3xl font-serif font-semibold text-gray-800">{{ ritmo.cantidadAniosDistintos }}</p>
+          <p class="text-xs text-gray-500 mt-1">Años distintos</p>
+        </div>
+        <div class="bg-white rounded-md shadow-sm p-5 text-center">
+          <p class="text-3xl font-serif font-semibold text-gray-800">
+            {{ ritmo.promedioLibrosPorAnio != null ? (ritmo.promedioLibrosPorAnio | number: '1.1-1') : '—' }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">Promedio de libros por año</p>
+        </div>
+      </section>
+    }
+
+    <!-- Por estado -->
+    @if (porEstado().length > 0) {
+      <section class="bg-white rounded-md shadow-sm p-6 mb-6">
+        <h2 class="text-sm font-semibold uppercase text-gray-600 mb-4">Por estado</h2>
+        <div class="space-y-3">
+          @for (item of porEstado(); track item.etiqueta) {
+            <div>
+              <div class="flex justify-between text-xs text-gray-600 mb-1">
+                <span>{{ item.etiqueta }}</span>
+                <span>{{ item.cantidad }}</span>
+              </div>
+              <div class="w-full bg-gray-100 rounded-full h-2">
+                <div
+                  class="bg-orange-400 h-2 rounded-full"
+                  [style.width.%]="anchoBarra(item.cantidad, porEstado())"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Por género -->
+    @if (porGenero().length > 0) {
+      <section class="bg-white rounded-md shadow-sm p-6 mb-6">
+        <h2 class="text-sm font-semibold uppercase text-gray-600 mb-4">Por género</h2>
+        <div class="space-y-3">
+          @for (item of porGenero(); track item.etiqueta) {
+            <div>
+              <div class="flex justify-between text-xs text-gray-600 mb-1">
+                <span>{{ item.etiqueta }}</span>
+                <span>{{ item.cantidad }}</span>
+              </div>
+              <div class="w-full bg-gray-100 rounded-full h-2">
+                <div
+                  class="bg-orange-400 h-2 rounded-full"
+                  [style.width.%]="anchoBarra(item.cantidad, porGenero())"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Por año de lectura -->
+    @if (porAnioLectura().length > 0) {
+      <section class="bg-white rounded-md shadow-sm p-6 mb-6">
+        <h2 class="text-sm font-semibold uppercase text-gray-600 mb-4">Libros leídos por año</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+          @for (item of porAnioLectura(); track item.etiqueta) {
+            <div class="text-center bg-gray-50 rounded-md p-3">
+              <p class="text-lg font-semibold text-gray-800">{{ item.cantidad }}</p>
+              <p class="text-xs text-gray-500">{{ item.etiqueta }}</p>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>
