@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { EstadisticaService } from '../estadistica.service';
+import { GeneroService } from '../../libros/genero.service';
 import { ConteoDTO, ConteoDobleDTO, RitmoLecturaDTO } from '../../../core/models/estadistica';
 
 @Component({
@@ -11,6 +12,7 @@ import { ConteoDTO, ConteoDobleDTO, RitmoLecturaDTO } from '../../../core/models
 })
 export class Dashboard implements OnInit {
   private estadisticaService = inject(EstadisticaService);
+  private generoService = inject(GeneroService);
 
   // --- Estado general de carga de la página ---
   cargando = signal(true);
@@ -28,6 +30,11 @@ export class Dashboard implements OnInit {
   // --- Por género ---
   porGenero = signal<ConteoDTO[]>([]);
   anioGeneroSeleccionado = signal<number | null>(null); // null = "Todos"
+
+  // Mapa nombre de género -> iconoSlug, cargado una sola vez desde /api/generos.
+  // Se resuelve por separado de porGenero() porque ConteoDTO solo trae { etiqueta, cantidad },
+  // sin el iconoSlug (EstadisticaService no se mete con datos de presentación).
+  iconosPorGenero = signal<Map<string, string | undefined>>(new Map());
 
   // --- Por autor ---
   porAutor = signal<ConteoDobleDTO[]>([]);
@@ -81,6 +88,19 @@ export class Dashboard implements OnInit {
       error: () => this.error.set('No se pudo cargar el conteo por país.'),
     });
 
+    // Carga del mapa de íconos por género (una sola vez, no depende del año seleccionado).
+    // Si falla, no rompe el dashboard: simplemente no se muestran íconos.
+    this.generoService.listarTodos().subscribe({
+      next: (generos) => {
+        const mapa = new Map<string, string | undefined>();
+        for (const g of generos) {
+          mapa.set(g.nombre, g.iconoSlug);
+        }
+        this.iconosPorGenero.set(mapa);
+      },
+      error: () => this.iconosPorGenero.set(new Map()),
+    });
+
     // El ritmo de lectura va al final porque es el que apaga "cargando":
     // se asume que si esta petición ya volvió, las demás (más livianas) también.
     this.estadisticaService.obtenerRitmoLectura().subscribe({
@@ -116,6 +136,12 @@ export class Dashboard implements OnInit {
       total: item.cantidadTotal !== null ? (item.cantidadTotal / maximo) * 100 : null,
       leidos: (item.cantidadLeidos / maximo) * 100,
     };
+  }
+
+  // Busca el iconoSlug de un género por nombre (etiqueta de ConteoDTO).
+  // Devuelve undefined si el género no tiene ícono asignado o no se encontró.
+  iconoGenero(nombreGenero: string): string | undefined {
+    return this.iconosPorGenero().get(nombreGenero);
   }
 
 

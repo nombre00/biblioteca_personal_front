@@ -77,10 +77,10 @@
     }
 
     <!-- ========================================================
-         Por género: barra simple (ConteoDTO), con selector de año.
-         Si no hay libros leídos en el año elegido, se muestra un
-         mensaje en vez de ocultar la sección.
-         ======================================================== -->
+     Por género: barra simple (ConteoDTO), con selector de año.
+     Si no hay libros leídos en el año elegido, se muestra un
+     mensaje en vez de ocultar la sección.
+     ======================================================== -->
     <section class="bg-white rounded-md shadow-sm p-6 mb-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-sm font-semibold uppercase text-gray-600">Por género</h2>
@@ -101,7 +101,17 @@
           @for (item of porGenero(); track item.etiqueta) {
             <div>
               <div class="flex justify-between text-xs text-gray-600 mb-1">
-                <span>{{ item.etiqueta }}</span>
+                <span class="flex items-center gap-2">
+                  @if (iconoGenero(item.etiqueta); as slug) {
+                    <img
+                      [src]="'iconos-genero/' + slug + '.png'"
+                      [alt]="item.etiqueta"
+                      [title]="item.etiqueta"
+                      class="w-6 h-6 shrink-0"
+                    />
+                  }
+                  {{ item.etiqueta }}
+                </span>
                 <span>{{ item.cantidad }}</span>
               </div>
               <div class="w-full bg-gray-100 rounded-full h-2">

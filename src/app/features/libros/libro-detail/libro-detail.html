@@ -58,6 +58,22 @@
         @if (l.generos.length) {
           <div class="mt-6">
             <h3 class="text-xs font-semibold uppercase text-gray-400 mb-2">Géneros</h3>
+
+            @if (tieneAlgunIcono(l.generos)) {
+              <div class="flex flex-wrap gap-2 mb-2">
+                @for (genero of l.generos; track genero.id) {
+                  @if (genero.iconoSlug) {
+                    <img
+                      [src]="'iconos-genero/' + genero.iconoSlug + '.png'"
+                      [alt]="genero.nombre"
+                      [title]="genero.nombre"
+                      class="w-12 h-12 shrink-0"
+                    />
+                  }
+                }
+              </div>
+            }
+
             <div class="flex flex-wrap gap-2">
               @for (genero of l.generos; track genero.id) {
                 <span class="bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs">

@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { LibroService } from '../libro.service';
 import { LibroResponseDTO } from '../../../core/models/libro';
+import { GeneroDTO } from '../../../core/models/genero';
 
 @Component({
   selector: 'app-libro-detail',
@@ -44,5 +45,9 @@ export class LibroDetail implements OnInit {
         this.otrosLibrosAutor.set([]);
       },
     });
+  }
+
+  tieneAlgunIcono(generos: GeneroDTO[]): boolean {
+    return generos.some(g => !!g.iconoSlug);
   }
 }
