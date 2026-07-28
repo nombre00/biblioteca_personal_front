@@ -1,7 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LibroService } from '../libros/libro.service';
+import { RecomendacionesService } from '../estadisticas/recomendaciones.service'; // ajustar path real
 import { LibroResponseDTO } from '../../core/models/libro';
+import { SugerenciaLibroDTO } from '../../core/models/recomendacion';
 import { PortadaLibro } from '../../shared/components/portada-libro/portada-libro';
 
 @Component({
@@ -12,6 +14,7 @@ import { PortadaLibro } from '../../shared/components/portada-libro/portada-libr
 })
 export class Home implements OnInit {
   private libroService = inject(LibroService);
+  private recomendacionesService = inject(RecomendacionesService);
 
   cargando = signal(true);
   error = signal<string | null>(null);
@@ -20,14 +23,7 @@ export class Home implements OnInit {
   ultimosLeidos = signal<LibroResponseDTO[]>([]);
   ultimosIngresados = signal<LibroResponseDTO[]>([]);
 
-  // Placeholder: la lógica real de sugerencias queda pendiente de definir.
-  sugerencias = signal<{ titulo: string }[]>([
-    { titulo: 'Próximamente' },
-    { titulo: 'Próximamente' },
-    { titulo: 'Próximamente' },
-    { titulo: 'Próximamente' },
-    { titulo: 'Próximamente' },
-  ]);
+  sugerencias = signal<SugerenciaLibroDTO[]>([]);
 
   ngOnInit(): void {
     this.libroService.listarTodos().subscribe({
@@ -53,6 +49,13 @@ export class Home implements OnInit {
         this.error.set('No se pudo cargar la información del home.');
         this.cargando.set(false);
       },
+    });
+
+    this.recomendacionesService.obtenerPorAutorPendiente().subscribe({
+      next: (sugerencias) => this.sugerencias.set(sugerencias),
+      // Sección no crítica: si falla, simplemente queda vacía y no se muestra nada,
+      // sin afectar el resto del home.
+      error: () => this.sugerencias.set([]),
     });
   }
 
