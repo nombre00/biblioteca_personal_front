@@ -87,12 +87,18 @@
         @if (l.isbn) {
           <p class="mt-4 text-xs text-gray-400">ISBN: {{ l.isbn }}</p>
         }
-
+        <!-- resumen del libro generado por agentes IA -->
         <section class="mt-6 border-t border-gray-100 pt-4">
           <h3 class="text-xs font-semibold uppercase text-gray-400 mb-2">Resumen</h3>
-          <p class="text-gray-400 italic text-sm">
-            Este libro todavía no tiene resumen disponible.
-          </p>
+          @if (resumenCargando()) {
+            <p class="text-gray-400 italic text-sm">Generando resumen...</p>
+          } @else if (resumen(); as r) {
+            <p class="text-gray-600 text-sm whitespace-pre-line">{{ r.texto }}</p>
+          } @else {
+            <p class="text-gray-400 italic text-sm">
+              Este libro todavía no tiene resumen disponible.
+            </p>
+          }
         </section>
       </div>
     </div>
