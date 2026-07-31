@@ -2,9 +2,11 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AutorService } from '../autor.service';
 import { LibroService } from '../../libros/libro.service';
+import { BiografiaService } from '../biografia.service';
 import { AutorResponseDTO } from '../../../core/models/autor';
 import { LibroResponseDTO } from '../../../core/models/libro';
 import { GeneroDTO } from '../../../core/models/genero';
+import { BiografiaResponse } from '../../../core/models/biografia';
 
 @Component({
   selector: 'app-autor-detail',
@@ -15,12 +17,16 @@ import { GeneroDTO } from '../../../core/models/genero';
 export class AutorDetail implements OnInit {
   private autorService = inject(AutorService);
   private libroService = inject(LibroService);
+  private biografiaService = inject(BiografiaService);
   private route = inject(ActivatedRoute);
 
   autor = signal<AutorResponseDTO | null>(null);
   librosAutor = signal<LibroResponseDTO[]>([]);
   cargando = signal(true);
   error = signal<string | null>(null);
+
+  biografia = signal<BiografiaResponse | null>(null);
+  biografiaCargando = signal(true);
 
   // Unión deduplicada de géneros de todos los libros del autor, ordenada por frecuencia descendente.
   generosAutor = computed<GeneroDTO[]>(() => {
@@ -49,6 +55,7 @@ export class AutorDetail implements OnInit {
       next: (data) => {
         this.autor.set(data);
         this.cargando.set(false);
+        this.cargarBiografia(id, data);
       },
       error: () => {
         this.error.set('No se pudo cargar el autor solicitado.');
@@ -61,5 +68,32 @@ export class AutorDetail implements OnInit {
       // si falla la carga de libros relacionados, no rompemos la página del autor
       error: () => this.librosAutor.set([]),
     });
+  }
+
+  // Gestión de biografía
+  private cargarBiografia(autorId: number, autor: AutorResponseDTO): void {
+    const datos = {
+      nombre_autor: autor.nombre,
+      nacionalidad: autor.pais?.nombre ?? null,
+      anio_nacimiento: this.extraerAnio(autor.fechaNacimiento, autor.anioNacimientoAprox),
+      anio_defuncion: this.extraerAnio(autor.fechaDefuncion, autor.anioDefuncionAprox),
+    };
+
+    this.biografiaService.obtener(autorId, datos).subscribe({
+      next: (data) => {
+        this.biografia.set(data);
+        this.biografiaCargando.set(false);
+      },
+      // si falla la generación, no rompemos la página del autor; se mantiene el placeholder
+      error: () => this.biografiaCargando.set(false),
+    });
+  }
+
+  // Prioriza la fecha exacta si existe; si no, usa el año aproximado.
+  private extraerAnio(fecha?: string, anioAprox?: number): number | null {
+    if (fecha) {
+      return Number(fecha.split('-')[0]);
+    }
+    return anioAprox ?? null;
   }
 }
