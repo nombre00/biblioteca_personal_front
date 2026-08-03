@@ -1,2 +1,31 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+@theme {
+  --font-base: Cardo, "Times New Roman", serif;
+
+  --text-pequena: 1.2rem;
+  --text-mediana: 1.5rem;
+  --text-grande: 2.5rem;
+
+  --spacing-separador-chico: 3rem;
+  --spacing-separador-mediano: 7rem;
+
+  --background-image-fondo1: url('/fondos/fondo-1.jpg');
+  --background-image-fondo3: url('/fondos/fondo-3.jpg')
+}
+
+body {
+  font-family: var(--font-base);
+}
+
+:root {
+  --color-overlay-fondo: #faf8f5;
+  --opacity-overlay-fondo: 0.7;
+}
+
+.overlay-fondo {
+  background-color: var(--color-overlay-fondo);
+  opacity: var(--opacity-overlay-fondo);
+}

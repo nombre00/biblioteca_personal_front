@@ -85,6 +85,10 @@ export class LibroForm implements OnInit {
     [...this.libros()].sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'))
   );
 
+  autoresOrdenados = computed(() =>
+    [...this.autores()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+  );
+
   generosSeleccionados = computed(() => {
     const ids = this.model().generoIds;
     return this.generosDisponiblesTodos().filter((g) => ids.includes(g.id!));

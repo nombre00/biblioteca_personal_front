@@ -1,27 +1,33 @@
-<div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
-  <h1 class="text-2xl font-serif font-semibold text-gray-800 mb-1">Mi biblioteca</h1>
-  <p class="text-sm text-gray-500 mb-8">Bienvenido de vuelta.</p>
+<div class="w-full px-6 py-8 bg-fondo1 bg-cover bg-center min-h-screen flex flex-col">
+  <!-- Encabezado -->
+  <div class="w-1/3 bg-gray-50 rounded-lg p-2 flex items-center justify-center mb-separador-chico mx-auto">
+    <h1 class="text-grande font-semibold text-gray-800 mb-1">Mi biblioteca</h1>
+  </div>
 
   <!-- Accesos rápidos -->
+  <!-- Ir a lista de libros -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
     <a routerLink="/libros" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Ver mis libros</h3>
-      <p class="text-xs text-gray-500 mt-1">Explora tu colección completa</p>
+      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Ver mis libros</h3>
+      <p class="text-pequena text-gray-500 mt-1">Explora tu colección completa</p>
     </a>
 
+    <!-- Ir a gestión de libros -->
     <a routerLink="/libros/gestionar" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Gestionar libros</h3>
-      <p class="text-xs text-gray-500 mt-1">Agrega, edita o elimina libros</p>
+      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Gestionar libros</h3>
+      <p class="text-pequena text-gray-500 mt-1">Agrega, edita o elimina libros</p>
     </a>
 
+    <!-- Ir a lista de autores -->
     <a routerLink="/autores" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Ver autores</h3>
-      <p class="text-xs text-gray-500 mt-1">Explora los autores registrados</p>
+      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Ver autores</h3>
+      <p class="text-pequena text-gray-500 mt-1">Explora los autores registrados</p>
     </a>
 
+    <!-- Ir a gestión de autores -->
     <a routerLink="/autores/gestionar" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="font-medium text-gray-800 group-hover:text-orange-500">Gestionar autores</h3>
-      <p class="text-xs text-gray-500 mt-1">Agrega, edita o elimina autores</p>
+      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Gestionar autores</h3>
+      <p class="text-pequena text-gray-500 mt-1">Agrega, edita o elimina autores</p>
     </a>
   </div>
 
@@ -32,85 +38,102 @@
   } @else {
 
     <!-- Leyendo ahora: contenedor a ancho completo, portada 1/3, resumen 2/3 -->
-  @if (leyendo().length > 0) {
-    <section class="mb-10">
-      <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-4">Leyendo ahora</h2>
-      <div class="flex flex-col gap-4">
-        @for (libro of leyendo(); track libro.id) {
+    @if (leyendo().length > 0) {
+      <section class="mb-10 mt-separador-mediano">
+        <div class="flex flex-col gap-4">
+          @for (libro of leyendo(); track libro.id) {
 
-          <a  [routerLink]="['/libros', libro.id]"
-            class="group flex items-stretch gap-6 bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-6"
-          >
-            <div class="w-1/3 shrink-0">
-              <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="grande" />
-            </div>
-            <div class="w-2/3 min-w-0 flex flex-col">
-              <h3 class="text-lg font-medium text-gray-800 group-hover:text-orange-500">{{ libro.titulo }}</h3>
-              <p class="text-sm text-gray-500 mt-0.5">{{ libro.autor.nombre }}</p>
-              <div class="mt-3 border border-dashed border-gray-300 rounded-md p-4 bg-gray-50 flex-1 min-h-0 overflow-y-auto">
-                @if (estaCargandoResumen(libro.id)) {
-                  <p class="text-base italic text-gray-400">Generando resumen...</p>
-                } @else if (resumenDe(libro.id); as r) {
-                  <p class="text-base text-gray-600 whitespace-pre-line">{{ r.texto }}</p>
-                } @else {
-                  <p class="text-base italic text-gray-400">Resumen no disponible.</p>
-                }
+            <a  [routerLink]="['/libros', libro.id]"
+              class="group flex items-stretch gap-6 bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-6"
+            >
+              <div class="w-1/3 shrink-0">
+                <h2 class="text-grande font-semibold text-gray-800 mb-4">Leyendo ahora</h2>
+                <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="grande" />
               </div>
-            </div>
-          </a>
-        }
-      </div>
-    </section>
-  }
+              <div class="w-2/3 min-w-0 flex flex-col">
+                <h3 class="text-mediana font-medium font-semibold text-gray-800 group-hover:text-orange-500">{{ libro.titulo }}</h3>
+                <p class="text-mediana font-semibold text-gray-500 mt-0.5">{{ libro.autor.nombre }}</p>
+                
+                <!-- Contenedor del resumen con fondo3 y el overlay -->
+                <div class="relative mt-3 border border-dashed border-gray-300 rounded-md p-4 bg-fondo3 bg-cover bg-center flex-1 min-h-0 overflow-y-auto">
+                  
+                  <!-- Capa de overlay semitransparente por encima del fondo3 -->
+                  <div class="absolute inset-0 overlay-fondo pointer-events-none"></div>
+
+                  <!-- Contenido del resumen en una capa superior (z-10) para que no pierda opacidad -->
+                  <div class="relative z-10 h-full">
+                    @if (estaCargandoResumen(libro.id)) {
+                      <p class="text-pequena italic text-gray-400">Generando resumen...</p>
+                    } @else if (resumenDe(libro.id); as r) {
+                      <p class="text-pequena text-gray-600 whitespace-pre-line">{{ r.texto }}</p>
+                    } @else {
+                      <p class="text-pequena italic text-gray-400">Resumen no disponible.</p>
+                    }
+                  </div>
+
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
 
     <!-- Sugerencias -->
     @if (sugerencias().length > 0) {
-      <section class="mb-10">
-        <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-4">Sugerencias para ti</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
-          @for (item of sugerencias(); track item.libroId) {
-            <a [routerLink]="['/libros', item.libroId]" class="group flex flex-col">
-              <app-portada-libro [portadaUrl]="item.urlPortada" [titulo]="item.titulo" tamano="chico" />
-              <h3 class="mt-2 text-lg font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
-                {{ item.titulo }}
-              </h3>
-              <p class="text-xs text-gray-500 mt-0.5">{{ item.autorNombre }}</p>
-            </a>
-          }
+      <section class="mb-10 mt-separador-mediano">
+        <div class="w-full bg-gray-50 rounded-lg p-4">
+          <h2 class="text-grande font-semibold text-gray-800 mb-4">Sugerencias de escritores preferidos</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
+            @for (item of sugerencias(); track item.libroId) {
+              <a [routerLink]="['/libros', item.libroId]" class="group flex flex-col">
+                <app-portada-libro [portadaUrl]="item.urlPortada" [titulo]="item.titulo" tamano="chico" />
+                <h3 class="mt-2 text-pequena font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
+                  {{ item.titulo }}
+                </h3>
+                <p class="text-pequena text-gray-500 mt-0.5">{{ item.autorNombre }}</p>
+              </a>
+            }
+          </div>
+
         </div>
       </section>
     }
 
     <!-- Últimos leídos -->
     @if (ultimosLeidos().length > 0) {
-      <section class="mb-10">
-        <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-4">Últimos leídos</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
-          @for (libro of ultimosLeidos(); track libro.id) {
-            <a [routerLink]="['/libros', libro.id]" class="group flex flex-col">
-              <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="chico" />
-              <h3 class="mt-2 text-lg font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
-                {{ libro.titulo }}
-              </h3>
-            </a>
-          }
+      <section class="mb-10 mt-separador-mediano">
+        <div class="w-full bg-gray-50 rounded-lg p-4">
+          <h2 class="text-grande font-semibold text-gray-800 mb-4">Últimos leídos</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
+            @for (libro of ultimosLeidos(); track libro.id) {
+              <a [routerLink]="['/libros', libro.id]" class="group flex flex-col">
+                <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="chico" />
+                <h3 class="mt-2 text-pequena font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
+                  {{ libro.titulo }}
+                </h3>
+              </a>
+            }
+          </div>
         </div>
       </section>
     }
 
     <!-- Últimos ingresados -->
     @if (ultimosIngresados().length > 0) {
-      <section class="mb-10">
-        <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-4">Últimos ingresados</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
-          @for (libro of ultimosIngresados(); track libro.id) {
-            <a [routerLink]="['/libros', libro.id]" class="group flex flex-col">
-              <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="chico" />
-              <h3 class="mt-2 text-lg font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
-                {{ libro.titulo }}
-              </h3>
-            </a>
-          }
+      <section class="mb-10 mt-separador-mediano">
+        <div class="w-full bg-gray-50 rounded-lg p-4">
+          <h2 class="text-grande font-semibold text-gray-800 mb-4">Últimos ingresados</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
+            @for (libro of ultimosIngresados(); track libro.id) {
+              <a [routerLink]="['/libros', libro.id]" class="group flex flex-col">
+                <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="chico" />
+                <h3 class="mt-2 text-pequena font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
+                  {{ libro.titulo }}
+                </h3>
+              </a>
+            }
+          </div>
         </div>
       </section>
     }

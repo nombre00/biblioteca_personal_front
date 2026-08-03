@@ -106,7 +106,7 @@
               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
             >
               <option value="" disabled>Selecciona un autor</option>
-              @for (autor of autores(); track autor.id) {
+              @for (autor of autoresOrdenados(); track autor.id) {
                 <option [value]="autor.id">{{ autor.nombre }} ({{ autor.pais.nombre }})</option>
               }
             </select>

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LibroService } from '../libro.service';
@@ -36,6 +36,24 @@ export class LibroList implements OnInit {
   generosDisponibles = signal<GeneroDTO[]>([]);
   paisesDisponibles = signal<PaisDTO[]>([]);
 
+  // ==========================================
+  // ESTADO DE PAGINACIÓN
+  // ==========================================
+  paginaActual = signal(1);
+  librosPorPagina = 80;
+
+  // Libros que se muestran únicamente en la página actual
+  librosPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.librosPorPagina;
+    const fin = inicio + this.librosPorPagina;
+    return this.libros().slice(inicio, fin);
+  });
+
+  // Total de páginas calculadas automáticamente
+  totalPaginas = computed(() => {
+    return Math.ceil(this.libros().length / this.librosPorPagina) || 1;
+  });
+
   ngOnInit(): void {
     this.cargarLibros();
 
@@ -50,6 +68,7 @@ export class LibroList implements OnInit {
 
   private cargarLibros(): void {
     this.cargando.set(true);
+    this.paginaActual.set(1); // Reiniciar a la página 1 al recargar
     this.libroService.listarTodos().subscribe({
       next: (data) => {
         this.libros.set(data);
@@ -86,6 +105,7 @@ export class LibroList implements OnInit {
     this.idiomaFiltro.set('');
     this.generosFiltro.set([]);
     this.mostrarFiltros.set(false);
+    this.paginaActual.set(1);
     this.cargarLibros();
   }
 
@@ -99,6 +119,7 @@ export class LibroList implements OnInit {
     };
 
     this.cargando.set(true);
+    this.paginaActual.set(1); // Reiniciar a la página 1 en cada nueva búsqueda/filtro
     this.libroService.buscarConFiltros(filtro).subscribe({
       next: (data) => {
         this.libros.set(data);
@@ -109,6 +130,16 @@ export class LibroList implements OnInit {
         this.cargando.set(false);
       }
     });
+  }
+
+  // ==========================================
+  // MÉTODOS DE NAVEGACIÓN DE PÁGINAS
+  // ==========================================
+  cambiarPagina(nuevaPagina: number): void {
+    if (nuevaPagina >= 1 && nuevaPagina <= this.totalPaginas()) {
+      this.paginaActual.set(nuevaPagina);
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Sube al inicio al cambiar de página
+    }
   }
 
   nombresGeneros(libro: LibroResponseDTO): string {
