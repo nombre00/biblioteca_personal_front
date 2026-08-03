@@ -3,10 +3,13 @@ import { DecimalPipe } from '@angular/common';
 import { EstadisticaService } from '../estadistica.service';
 import { GeneroService } from '../../libros/genero.service';
 import { ConteoDTO, ConteoDobleDTO, RitmoLecturaDTO } from '../../../core/models/estadistica';
+import { GraficoPie } from '../../../shared/graficos/grafico-pie/grafico-pie';
+import { GraficoLineas } from '../../../shared/graficos/grafico-lineas/grafico-lineas';
+import { GraficoTreemap } from '../../../shared/graficos/grafico-treemap/grafico-treemap';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, GraficoPie, GraficoLineas, GraficoTreemap],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

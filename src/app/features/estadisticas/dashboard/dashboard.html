@@ -37,6 +37,7 @@
          Por año de lectura: grilla simple, sin selector.
          Además alimenta el <select> de año de las demás secciones.
          ======================================================== -->
+    <app-grafico-lineas [datos]="porAnioLectura()" />
     @if (porAnioLectura().length > 0) {
       <section class="bg-white rounded-md shadow-sm p-6 mb-6">
         <h2 class="text-sm font-semibold uppercase text-gray-600 mb-4">Libros leídos por año</h2>
@@ -49,11 +50,12 @@
           }
         </div>
       </section>
-    }
+    } 
 
     <!-- ========================================================
          Por estado: barra simple (ConteoDTO), sin selector de año.
          ======================================================== -->
+    <app-grafico-pie [datos]="porEstado()" />
     @if (porEstado().length > 0) {
       <section class="bg-white rounded-md shadow-sm p-6 mb-6">
         <h2 class="text-sm font-semibold uppercase text-gray-600 mb-4">Por estado</h2>
@@ -81,6 +83,7 @@
      Si no hay libros leídos en el año elegido, se muestra un
      mensaje en vez de ocultar la sección.
      ======================================================== -->
+    <app-grafico-treemap [datos]="porGenero()" />
     <section class="bg-white rounded-md shadow-sm p-6 mb-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-sm font-semibold uppercase text-gray-600">Por género</h2>
