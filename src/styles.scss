@@ -5,6 +5,7 @@
 @theme {
   --font-base: Cardo, "Times New Roman", serif;
 
+  --text-chico: 0.95rem;
   --text-pequena: 1.2rem;
   --text-mediana: 1.5rem;
   --text-grande: 2.5rem;
@@ -13,7 +14,10 @@
   --spacing-separador-mediano: 7rem;
 
   --background-image-fondo1: url('/fondos/fondo-1.jpg');
-  --background-image-fondo3: url('/fondos/fondo-3.jpg')
+  --background-image-fondo2: url('/fondos/fondo-2.jpg');
+  --background-image-fondo3: url('/fondos/fondo-3.jpg');
+  --background-image-fondo4: url('/fondos/fondo-4.jpg');
+  --background-image-fondo5: url('/fondos/fondo-5.jpg');
 }
 
 body {
@@ -22,7 +26,7 @@ body {
 
 :root {
   --color-overlay-fondo: #faf8f5;
-  --opacity-overlay-fondo: 0.7;
+  --opacity-overlay-fondo: 0.75;
 }
 
 .overlay-fondo {

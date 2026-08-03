@@ -7,18 +7,19 @@
     <p class="text-red-600">{{ error() }}</p>
   </div>
 } @else if (autor(); as a) {
-  <div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+  <div class="w-full px-6 py-8 bg-gray-50 min-h-screen bg-fondo5">
     <a routerLink="/autores" class="text-sm text-gray-500 hover:text-orange-500">
       &larr; Volver a autores
     </a>
 
-    <div class="mt-4 bg-white rounded-md shadow-sm p-8 flex gap-10 items-start">
+    <!-- card que contiene la info del autor. -->
+    <div class="mt-4 bg-white rounded-md shadow-sm p-8 flex gap-10 items-stretch">
       <!-- Retrato -->
       @if (a.retratoUrl) {
         <img
           [src]="a.retratoUrl"
           [alt]="a.nombre"
-          class="w-[clamp(180px,20vw,320px)] shrink-0 aspect-[3/4] object-cover rounded-md shadow-md"
+          class="w-1/4 shrink-0 aspect-[3/4] object-cover rounded-md shadow-md"
         />
       } @else {
         <div class="w-[clamp(180px,20vw,320px)] shrink-0 aspect-[3/4] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
@@ -29,70 +30,85 @@
       }
 
       <!-- Info -->
-      <div class="flex-1">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h1 class="text-3xl font-serif font-semibold text-gray-800">{{ a.nombre }}</h1>
-            <p class="mt-2 text-base text-gray-600">{{ a.pais.nombre }}</p>
-            <p class="text-sm text-gray-500">{{ a.idioma }}</p>
+      <div class="relative flex-1 self-stretch flex flex-col justify-between p-6 rounded-md bg-fondo2 bg-cover bg-center shadow-sm">
+  
+        <!-- Capa de overlay semitransparente -->
+        <div class="absolute inset-0 overlay-fondo pointer-events-none rounded-md"></div>
+
+        <!-- Contenido en una capa superior (z-10) para mantener la opacidad y nitidez -->
+        <div class="relative z-10">
+          <!-- Nombre, país, idioma -->
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h1 class="text-mediana font-semibold text-gray-800">{{ a.nombre }}</h1>
+              <p class="mt-2 text-pequena text-gray-600">{{ a.pais.nombre }}</p>
+              <p class="text-pequena text-gray-500">{{ a.idioma }}</p>
+            </div>
+
+            <!-- Íconos de los géneros -->
+            @if (generosAutor().length > 0) {
+              <div class="flex flex-wrap gap-2 shrink-0">
+                @for (genero of generosAutor(); track genero.id) {
+                  @if (genero.iconoSlug) {
+                    <img
+                      [src]="'iconos-genero/' + genero.iconoSlug + '.png'"
+                      [alt]="genero.nombre"
+                      [title]="genero.nombre"
+                      class="w-12 h-12 shrink-0"
+                    />
+                  }
+                }
+              </div>
+            }
           </div>
 
-          @if (generosAutor().length > 0) {
-            <div class="flex flex-wrap gap-2 shrink-0">
-              @for (genero of generosAutor(); track genero.id) {
-                @if (genero.iconoSlug) {
-                  <img
-                    [src]="'iconos-genero/' + genero.iconoSlug + '.png'"
-                    [alt]="genero.nombre"
-                    [title]="genero.nombre"
-                    class="w-12 h-12 shrink-0"
-                  />
+          <!-- Fecha de nacimiento y defunción. -->
+          @if (a.fechaNacimiento || a.anioNacimientoAprox != null || a.fechaDefuncion || a.anioDefuncionAprox != null) {
+            <p class="mt-2 text-sm text-gray-400">
+              <!-- Bloque de Nacimiento -->
+              @if (a.fechaNacimiento) {
+                {{ a.fechaNacimiento.split('-')[0] }}
+              } @else if (a.anioNacimientoAprox != null) {
+                {{ a.anioNacimientoAprox < 0 ? (-a.anioNacimientoAprox) + ' a.C.' : a.anioNacimientoAprox }}
+              } @else {
+                ?
+              }
+              <!-- El guion y la defunción solo se muestran si existe algún dato de defunción -->
+              @if (a.fechaDefuncion || a.anioDefuncionAprox != null) {
+                &ndash;
+                @if (a.fechaDefuncion) {
+                  {{ a.fechaDefuncion.split('-')[0] }}
+                } @else if (a.anioDefuncionAprox != null) {
+                  {{ a.anioDefuncionAprox < 0 ? (-a.anioDefuncionAprox) + ' a.C.' : a.anioDefuncionAprox }}
                 }
               }
-            </div>
+            </p>
           }
-        </div>
 
-        @if (a.fechaNacimiento || a.anioNacimientoAprox != null || a.fechaDefuncion || a.anioDefuncionAprox != null) {
-          <p class="mt-2 text-sm text-gray-400">
-            @if (a.fechaNacimiento) {
-              {{ a.fechaNacimiento.split('-')[0] }}
-            } @else if (a.anioNacimientoAprox != null) {
-              {{ a.anioNacimientoAprox < 0 ? (-a.anioNacimientoAprox) + ' a.C.' : a.anioNacimientoAprox }}
+          <!-- Biografía. -->
+          <section class="mt-6 border-t border-gray-200/60 pt-4">
+            <h3 class="text-mediana font-semibold uppercase text-gray-400 mb-2">Biografía</h3>
+            @if (biografiaCargando()) {
+              <p class="text-gray-400 italic text-sm">
+                Generando biografía...
+              </p>
+            } @else if (biografia(); as bio) {
+              <p class="text-gray-600 text-chico leading-relaxed whitespace-pre-line">
+                {{ bio.texto }}
+              </p>
             } @else {
-              ?
+              <p class="text-gray-400 italic text-sm">
+                Este autor todavía no tiene biografía disponible.
+              </p>
             }
-            &ndash;
-            @if (a.fechaDefuncion) {
-              {{ a.fechaDefuncion.split('-')[0] }}
-            } @else if (a.anioDefuncionAprox != null) {
-              {{ a.anioDefuncionAprox < 0 ? (-a.anioDefuncionAprox) + ' a.C.' : a.anioDefuncionAprox }}
-            }
-          </p>
-        }
-
-        <section class="mt-6 border-t border-gray-100 pt-4">
-          <h3 class="text-xs font-semibold uppercase text-gray-400 mb-2">Biografía</h3>
-          @if (biografiaCargando()) {
-            <p class="text-gray-400 italic text-sm">
-              Generando biografía...
-            </p>
-          } @else if (biografia(); as bio) {
-            <p class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
-              {{ bio.texto }}
-            </p>
-          } @else {
-            <p class="text-gray-400 italic text-sm">
-              Este autor todavía no tiene biografía disponible.
-            </p>
-          }
-        </section>
+          </section>
+        </div>
       </div>
     </div>
 
     <!-- Libros del autor -->
     @if (librosAutor().length > 0) {
-      <div class="mt-8">
+      <div class="w-full bg-gray-50/80 rounded-lg p-4 mt-separador-mediano">
         <h3 class="text-sm font-semibold uppercase text-gray-500 mb-4">
           Libros de {{ a.nombre }}
         </h3>
