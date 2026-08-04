@@ -29,7 +29,7 @@ export class GraficoTreemap {
 
   chart: ApexChart = {
     type: 'treemap',
-    height: 600,
+    height: 500,
     toolbar: { show: false },
   };
 

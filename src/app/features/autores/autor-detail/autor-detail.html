@@ -8,9 +8,6 @@
   </div>
 } @else if (autor(); as a) {
   <div class="w-full px-6 py-8 bg-gray-50 min-h-screen bg-fondo5">
-    <a routerLink="/autores" class="text-sm text-gray-500 hover:text-orange-500">
-      &larr; Volver a autores
-    </a>
 
     <!-- card que contiene la info del autor. -->
     <div class="mt-4 bg-white rounded-md shadow-sm p-8 flex gap-10 items-stretch">
@@ -54,7 +51,7 @@
                       [src]="'iconos-genero/' + genero.iconoSlug + '.png'"
                       [alt]="genero.nombre"
                       [title]="genero.nombre"
-                      class="w-12 h-12 shrink-0"
+                      class="w-16 h-16 shrink-0"
                     />
                   }
                 }
@@ -109,26 +106,26 @@
     <!-- Libros del autor -->
     @if (librosAutor().length > 0) {
       <div class="w-full bg-gray-50/80 rounded-lg p-4 mt-separador-mediano">
-        <h3 class="text-sm font-semibold uppercase text-gray-500 mb-4">
+        <h3 class="text-mediana font-semibold uppercase text-gray-500 mb-4">
           Libros de {{ a.nombre }}
         </h3>
         <div class="flex flex-wrap gap-6">
           @for (libro of librosAutor(); track libro.id) {
-            <a [routerLink]="['/libros', libro.id]" class="group w-32 flex flex-col">
+            <a [routerLink]="['/libros', libro.id]" class="group w-40 flex flex-col">
               @if (libro.portadaUrl) {
                 <img
                   [src]="libro.portadaUrl"
                   [alt]="libro.titulo"
-                  class="w-32 aspect-[2/3] object-cover rounded-md shadow-sm group-hover:shadow-md transition-shadow"
+                  class="w-40 aspect-[2/3] object-cover rounded-md shadow-sm group-hover:shadow-md transition-shadow"
                 />
               } @else {
-                <div class="w-32 aspect-[2/3] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+                <div class="w-40 aspect-[2/3] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-gray-300">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25a8.987 8.987 0 0 0-3-.512c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
                   </svg>
                 </div>
               }
-              <p class="mt-2 text-xs text-gray-600 group-hover:text-orange-500 line-clamp-2">
+              <p class="mt-2 text-chico text-gray-600 group-hover:text-orange-500 line-clamp-2">
                 {{ libro.titulo }}
               </p>
             </a>

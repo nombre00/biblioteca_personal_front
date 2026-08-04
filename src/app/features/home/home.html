@@ -1,33 +1,29 @@
 <div class="w-full px-6 py-8 bg-fondo1 bg-cover bg-center min-h-screen flex flex-col">
   <!-- Encabezado -->
-  <div class="w-1/3 bg-gray-50 rounded-lg p-2 flex items-center justify-center mb-separador-chico mx-auto">
-    <h1 class="text-grande font-semibold text-gray-800 mb-1">Mi biblioteca</h1>
+  <div class="w-1/2 bg-gray-50 rounded-full p-2 flex items-center justify-center mb-separador-chico mx-auto">
+    <h1 class="text-grande font-semibold text-gray-800 mb-1">Mi Biblioteca</h1>
   </div>
 
   <!-- Accesos rápidos -->
   <!-- Ir a lista de libros -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-    <a routerLink="/libros" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Ver mis libros</h3>
-      <p class="text-pequena text-gray-500 mt-1">Explora tu colección completa</p>
+    <a routerLink="/libros" class="group bg-white rounded-full shadow-sm hover:shadow-md transition-all p-4 flex items-center justify-center border-1 border-gray-400 hover:border-black">
+      <h3 class="text-mediana font-semibold text-gray-600 group-hover:text-black transition-colors">Ver mis libros</h3>
     </a>
 
     <!-- Ir a gestión de libros -->
-    <a routerLink="/libros/gestionar" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Gestionar libros</h3>
-      <p class="text-pequena text-gray-500 mt-1">Agrega, edita o elimina libros</p>
+    <a routerLink="/libros/gestionar" class="group bg-white rounded-full shadow-sm hover:shadow-md transition-all p-4 flex items-center justify-center border-1 border-gray-400 hover:border-black">
+      <h3 class="text-mediana font-semibold text-gray-600 group-hover:text-black transition-colors">Gestionar libros</h3>
     </a>
 
     <!-- Ir a lista de autores -->
-    <a routerLink="/autores" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Ver autores</h3>
-      <p class="text-pequena text-gray-500 mt-1">Explora los autores registrados</p>
+    <a routerLink="/autores" class="group bg-white rounded-full shadow-sm hover:shadow-md transition-all p-4 flex items-center justify-center border-1 border-gray-400 hover:border-black">
+      <h3 class="text-mediana font-semibold text-gray-600 group-hover:text-black transition-colors">Ver mis autores</h3>
     </a>
 
     <!-- Ir a gestión de autores -->
-    <a routerLink="/autores/gestionar" class="group bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-5">
-      <h3 class="text-mediana font-semibold text-gray-800 group-hover:text-orange-500">Gestionar autores</h3>
-      <p class="text-pequena text-gray-500 mt-1">Agrega, edita o elimina autores</p>
+    <a routerLink="/autores/gestionar" class="group bg-white rounded-full shadow-sm hover:shadow-md transition-all p-4 flex items-center justify-center border-1 border-gray-400 hover:border-black">
+      <h3 class="text-mediana font-semibold text-gray-600 group-hover:text-black transition-colors">Gestionar autores</h3>
     </a>
   </div>
 
