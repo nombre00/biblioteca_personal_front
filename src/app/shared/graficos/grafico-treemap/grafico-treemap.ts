@@ -20,7 +20,7 @@ export class GraficoTreemap {
   datos = input.required<ConteoDTO[]>();
 
   // El treemap de Apex pide una sola serie, cuya 'data' es un array de puntos {x, y}:
-  // x = etiqueta de la celda, y = valor que determina su tamaño.
+  // x = etiqueta de la celda, y = valor que determina su tamaño. 
   series = computed<ApexNonAxisChartSeries>(() => [
     {
       data: this.datos().map((d) => ({ x: d.etiqueta, y: d.cantidad })),

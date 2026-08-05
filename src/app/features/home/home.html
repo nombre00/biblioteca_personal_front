@@ -79,7 +79,7 @@
     @if (sugerencias().length > 0) {
       <section class="mb-10 mt-separador-mediano">
         <div class="w-full bg-gray-50/80 rounded-lg p-4">
-          <h2 class="text-grande font-semibold text-gray-800 mb-4">Sugerencias de escritores preferidos</h2>
+          <h2 class="text-grande font-semibold text-gray-800 mb-4">Sugerencias de escritores más leidos</h2>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
             @for (item of sugerencias(); track item.libroId) {
               <a [routerLink]="['/libros', item.libroId]" class="group flex flex-col">
