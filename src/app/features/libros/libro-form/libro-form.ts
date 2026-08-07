@@ -67,7 +67,7 @@ export class LibroForm implements OnInit {
   mensajeExito = signal<string | null>(null);
 
   eliminando = signal(false);
-  errorEliminar = signal<string | null>(null);
+  errorEliminar = signal<string | null>(null); 
 
   nombreGeneroNuevo = signal('');
   errorGenero = signal<string | null>(null);

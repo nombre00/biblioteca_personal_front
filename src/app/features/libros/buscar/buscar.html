@@ -1,0 +1,259 @@
+<div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+  <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-6">Agregar libro nuevo</h2>
+
+  @switch (paso()) {
+
+    <!-- ========================================== -->
+    <!-- PASO: búsqueda -->
+    <!-- ========================================== -->
+    @case ('busqueda') {
+      <div class="bg-white rounded-md shadow-sm p-6 mb-6">
+        <form (submit)="buscar(); $event.preventDefault()" class="flex gap-3">
+          <input
+            type="text"
+            placeholder="Título o autor a buscar..."
+            [value]="query()"
+            (input)="query.set($any($event.target).value)"
+            class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+          <button
+            type="submit"
+            [disabled]="!puedeBuscar()"
+            class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 disabled:opacity-50"
+          >
+            {{ buscando() ? 'Buscando...' : 'Buscar' }}
+          </button>
+        </form>
+
+        @if (errorBusqueda()) {
+          <p class="text-red-600 text-sm mt-3">{{ errorBusqueda() }}</p>
+        }
+      </div>
+
+      @if (buscando()) {
+        <div class="bg-white rounded-md shadow-sm p-8 flex justify-center">
+          <p class="text-gray-500">Buscando en Google Books...</p>
+        </div>
+      } @else if (yaSeBusco() && resultados().length === 0) {
+        <div class="bg-white rounded-md shadow-sm p-8 flex justify-center">
+          <p class="text-gray-500">No se encontraron resultados para esa búsqueda.</p>
+        </div>
+      } @else if (resultados().length > 0) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (libro of resultados(); track libro.google_id) {
+            <button
+              type="button"
+              (click)="elegirCandidato(libro)"
+              class="bg-white rounded-md shadow-sm p-4 flex gap-4 text-left hover:shadow-md transition-shadow"
+            >
+              <app-portada-libro
+                [portadaUrl]="libro.portada_url"
+                [titulo]="libro.titulo"
+                tamano="chico"
+                ancho="w-20"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="font-serif font-semibold text-gray-800 truncate">{{ libro.titulo }}</p>
+                <p class="text-sm text-gray-500 truncate">
+                  {{ libro.autores.length > 0 ? libro.autores.join(', ') : 'Autor desconocido' }}
+                </p>
+                @if (libro.anio_publicacion) {
+                  <p class="text-xs text-gray-400 mt-1">{{ libro.anio_publicacion }}</p>
+                }
+              </div>
+            </button>
+          }
+        </div>
+      }
+    }
+
+    <!-- ========================================== -->
+    <!-- PASO: elegir autor (libro con varios autores) -->
+    <!-- ========================================== -->
+    @case ('seleccion-autor') {
+      <div class="bg-white rounded-md shadow-sm p-6 max-w-lg">
+        <p class="text-sm text-gray-600 mb-4">
+          "{{ candidatoSeleccionado()?.titulo }}" tiene más de un autor. Elige con cuál continuar:
+        </p>
+
+        <select
+          [value]="autorElegido()"
+          (change)="autorElegido.set($any($event.target).value)"
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300 mb-4"
+        >
+          <option value="" disabled>Selecciona un autor</option>
+          @for (autor of candidatoSeleccionado()?.autores; track autor) {
+            <option [value]="autor">{{ autor }}</option>
+          }
+        </select>
+
+        <div class="flex gap-3">
+          <button
+            type="button"
+            (click)="confirmarAutorParaResolver()"
+            [disabled]="!autorElegido() || resolviendo()"
+            class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 disabled:opacity-50"
+          >
+            {{ resolviendo() ? 'Resolviendo...' : 'Continuar' }}
+          </button>
+          <button
+            type="button"
+            (click)="buscarOtro()"
+            class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2"
+          >
+            Volver a buscar
+          </button>
+        </div>
+
+        @if (errorResolucion()) {
+          <p class="text-red-600 text-sm mt-3">{{ errorResolucion() }}</p>
+        }
+      </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- PASO: confirmación de autor dudoso -->
+    <!-- ========================================== -->
+    @case ('confirmacion-autor') {
+      @if (resolucion()?.autor?.tipo === 'requiere_confirmacion') {
+        <div class="bg-white rounded-md shadow-sm p-6 max-w-lg">
+          <p class="text-sm text-gray-600 mb-2">
+            No estamos seguros si este autor ya existe en tu biblioteca:
+          </p>
+          <p class="font-serif font-semibold text-gray-800 mb-1">
+            {{ $any(resolucion()?.autor).nombre_candidato }}
+          </p>
+          <p class="text-xs text-gray-400 mb-4">
+            {{ $any(resolucion()?.autor).motivo }}
+          </p>
+
+          <div class="flex gap-3">
+            <button
+              type="button"
+              (click)="confirmarEsMismoAutor()"
+              class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2"
+            >
+              Es el mismo autor
+            </button>
+            <button
+              type="button"
+              (click)="confirmarEsAutorDistinto()"
+              class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2"
+            >
+              Es un autor distinto
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- ========================================== -->
+    <!-- PASO: revisión final -->
+    <!-- ========================================== -->
+    @case ('revision') {
+      @if (resolucion(); as res) {
+        <div class="bg-white rounded-md shadow-sm p-6 max-w-2xl">
+          <div class="flex gap-4 mb-6">
+            <app-portada-libro
+              [portadaUrl]="res.portada_url"
+              [titulo]="res.titulo"
+              tamano="grande"
+              ancho="w-32"
+            />
+            <div>
+              <p class="font-serif font-semibold text-lg text-gray-800">{{ res.titulo }}</p>
+              @if (res.anio_publicacion) {
+                <p class="text-sm text-gray-400">{{ res.anio_publicacion }}</p>
+              }
+            </div>
+          </div>
+
+          <!-- Autor resuelto -->
+          <div class="mb-4 pb-4 border-b border-gray-100">
+            <p class="text-xs font-semibold uppercase text-gray-400 mb-1">Autor</p>
+            @if (res.autor.tipo === 'existente') {
+              <p class="text-sm text-gray-700">{{ res.autor.nombre }} (ya en tu biblioteca)</p>
+            } @else if (res.autor.tipo === 'nuevo') {
+              <p class="text-sm text-gray-700">{{ res.autor.datos.nombre }} (autor nuevo)</p>
+            }
+          </div>
+
+          <!-- Géneros resueltos -->
+          <div class="mb-6 pb-4 border-b border-gray-100">
+            <p class="text-xs font-semibold uppercase text-gray-400 mb-2">Géneros</p>
+            @if (res.generos.length === 0) {
+              <p class="text-sm text-gray-400 italic">Sin géneros detectados.</p>
+            } @else {
+              <div class="flex flex-wrap gap-2">
+                @for (genero of res.generos; track $index) {
+                  <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-3 py-0.5 text-xs">
+                    {{ genero.tipo === 'existente' ? genero.nombre : genero.datos.nombre }}
+                    @if (genero.tipo === 'nuevo') {
+                      <span class="text-gray-400">(nuevo)</span>
+                    }
+                  </span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Estado de lectura -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+            <select
+              [value]="estadoElegido()"
+              (change)="estadoElegido.set($any($event.target).value)"
+              class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              <option value="POR_LEER">Por leer</option>
+              <option value="LEYENDO">Leyendo</option>
+              <option value="LEIDO">Leído</option>
+            </select>
+          </div>
+
+          @if (errorImportar()) {
+            <p class="text-red-600 text-sm mb-4">{{ errorImportar() }}</p>
+          }
+
+          <div class="flex gap-3">
+            <button
+              type="button"
+              (click)="confirmarImportacion()"
+              [disabled]="importando()"
+              class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 disabled:opacity-50"
+            >
+              {{ importando() ? 'Agregando...' : 'Agregar a mi biblioteca' }}
+            </button>
+            <button
+              type="button"
+              (click)="buscarOtro()"
+              [disabled]="importando()"
+              class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- ========================================== -->
+    <!-- PASO: completado -->
+    <!-- ========================================== -->
+    @case ('completado') {
+      <div class="bg-white rounded-md shadow-sm p-8 max-w-lg flex flex-col items-center text-center">
+        <p class="text-green-600 font-medium mb-2">¡Libro agregado a tu biblioteca!</p>
+        @if (libroImportado(); as libro) {
+          <p class="text-gray-700 mb-6">{{ libro.titulo }}</p>
+        }
+        <button
+          type="button"
+          (click)="buscarOtro()"
+          class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2"
+        >
+          Buscar otro libro
+        </button>
+      </div>
+    }
+  }
+</div>

@@ -9,12 +9,14 @@ import { AutorDetail } from './features/autores/autor-detail/autor-detail';
 import { AutorForm } from './features/autores/autor-form/autor-form';
 import { Dashboard } from './features/estadisticas/dashboard/dashboard';
 import { authGuard } from './core/guards/auth-guard';
+import { Buscar } from './features/libros/buscar/buscar';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
   { path: '', component: Home, canActivate: [authGuard] },
   { path: 'libros', component: LibroList, canActivate: [authGuard] },
   { path: 'libros/gestionar', component: LibroForm, canActivate: [authGuard] },
+  { path: 'libros/buscar', component: Buscar, canActivate: [authGuard] },
   { path: 'libros/:id', component: LibroDetail, canActivate: [authGuard] },
   { path: 'autores', component: AutorList, canActivate: [authGuard] },
   { path: 'autores/gestionar', component: AutorForm, canActivate: [authGuard] },
