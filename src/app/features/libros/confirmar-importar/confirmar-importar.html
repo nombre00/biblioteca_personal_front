@@ -1,0 +1,428 @@
+@if (cargando()) {
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-gray-500">Cargando datos...</p>
+  </div>
+} @else if (errorCarga()) {
+  <div class="w-full px-6 py-16 bg-gray-50 min-h-screen flex justify-center">
+    <p class="text-red-600">{{ errorCarga() }}</p>
+  </div>
+} @else if (libroImportado(); as libro) {
+  <!-- ========================================== -->
+  <!-- Completado -->
+  <!-- ========================================== -->
+  <div class="w-full px-6 py-8 bg-gray-50 min-h-screen flex justify-center">
+    <div class="bg-white rounded-md shadow-sm p-8 max-w-lg flex flex-col items-center text-center">
+      <p class="text-green-600 font-medium mb-2">¡Libro agregado a tu biblioteca!</p>
+      <p class="text-gray-700 mb-6">{{ libro.titulo }}</p>
+      <button
+        type="button"
+        (click)="buscarOtro()"
+        class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2"
+      >
+        Buscar otro libro
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="w-full px-6 py-8 bg-gray-50 min-h-screen">
+    <h2 class="text-2xl font-serif font-semibold text-gray-800 mb-6">Confirmar datos antes de agregar</h2>
+
+    <form (submit)="onSubmit(); $event.preventDefault()" class="bg-white rounded-md shadow-sm p-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <!-- Columna izquierda: portada -->
+        <div class="md:col-span-1">
+          <div class="md:sticky md:top-8">
+            <app-portada-libro
+              [portadaUrl]="model().portadaUrl.trim() || undefined"
+              [titulo]="model().titulo"
+              tamano="grande"
+              ancho="w-full"
+            />
+
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-600 mb-1">URL de portada</label>
+              <input
+                [formField]="libroForm.portadaUrl"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="md:col-span-2">
+          <!-- Título -->
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Título</label>
+            <input
+              [formField]="libroForm.titulo"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            />
+            @if (libroForm.titulo().touched() && libroForm.titulo().errors().length) {
+              <p class="text-red-600 text-xs mt-1">{{ libroForm.titulo().errors()[0].message }}</p>
+            }
+          </div>
+
+          @if (descripcion()) {
+            <div class="mb-5">
+              <label class="block text-sm font-medium text-gray-600 mb-1">Descripción</label>
+              <p class="text-sm text-gray-500 bg-gray-50 rounded-md p-3">{{ descripcion() }}</p>
+            </div>
+          }
+
+          <!-- ISBN + Año -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">ISBN</label>
+              <input
+                [formField]="libroForm.isbn"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Año de publicación</label>
+              <input
+                type="number"
+                placeholder="Usa negativos para a.C., ej. -400"
+                [formField]="libroForm.anioPublicacion"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+          </div>
+
+          <!-- Estado -->
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+            <select
+              [formField]="libroForm.estado"
+              class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              <option value="POR_LEER">Por leer</option>
+              <option value="LEYENDO">Leyendo</option>
+              <option value="LEIDO">Leído</option>
+            </select>
+          </div>
+
+          <!-- Géneros -->
+          <fieldset class="mt-6 border-t border-gray-100 pt-4 mb-6">
+            <legend class="text-xs font-semibold uppercase text-gray-400 mb-3">Géneros</legend>
+
+            @if (generosSeleccionados().length === 0) {
+              <p class="text-sm text-gray-400 italic mb-3">Ningún género seleccionado todavía.</p>
+            } @else {
+              <div class="flex flex-wrap gap-2 mb-4">
+                @for (genero of generosSeleccionados(); track $index) {
+                  <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full pl-3 pr-1 py-0.5 text-xs">
+                    {{ genero.tipo === 'existente' ? genero.nombre : genero.datos.nombre }}
+                    @if (genero.tipo === 'nuevo') {
+                      <span class="text-gray-400">(nuevo)</span>
+                    }
+                    <button
+                      type="button"
+                      (click)="quitarGenero($index)"
+                      class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500"
+                      aria-label="Quitar género"
+                    >
+                      ×
+                    </button>
+                  </span>
+                }
+              </div>
+            }
+
+            @if (generosDisponiblesParaAgregar().length > 0) {
+              <div class="flex gap-2 mb-4">
+                <select
+                  [value]="generoParaAgregar()"
+                  (change)="generoParaAgregar.set($any($event.target).value)"
+                  class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                >
+                  <option value="" disabled>Selecciona un género</option>
+                  @for (genero of generosDisponiblesParaAgregar(); track genero.id) {
+                    <option [value]="genero.id">{{ genero.nombre }}</option>
+                  }
+                </select>
+                <button
+                  type="button"
+                  (click)="agregarGeneroExistente()"
+                  class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                >
+                  Agregar
+                </button>
+              </div>
+            }
+
+            <div class="flex gap-2 items-start">
+              <input
+                type="text"
+                placeholder="Nombre de un género nuevo"
+                [value]="nombreGeneroNuevo()"
+                (input)="nombreGeneroNuevo.set($any($event.target).value)"
+                class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+              <button
+                type="button"
+                (click)="agregarGeneroNuevo()"
+                class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Agregar género nuevo
+              </button>
+            </div>
+          </fieldset>
+
+          <!-- ========================================== -->
+          <!-- Autor -->
+          <!-- ========================================== -->
+          <div class="border-t border-gray-100 pt-4">
+            <p class="text-xs font-semibold uppercase text-gray-400 mb-3">Autor</p>
+
+            @if (autor(); as a) {
+              @if (a.tipo === 'existente') {
+                <p class="text-sm text-gray-700 mb-2">{{ a.nombre }} (ya en tu biblioteca)</p>
+              } @else {
+
+                <p class="text-xs text-gray-400 mb-4">
+                  Autor nuevo — revisa y corrige los datos si hace falta antes de agregarlo.
+                </p>
+
+                <!-- Nombre -->
+                <div class="mb-5">
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Nombre</label>
+                  <input
+                    [formField]="autorNuevoForm.nombre"
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  />
+                  @if (autorNuevoForm.nombre().touched() && autorNuevoForm.nombre().errors().length) {
+                    <p class="text-red-600 text-xs mt-1">{{ autorNuevoForm.nombre().errors()[0].message }}</p>
+                  }
+                </div>
+
+                <!-- Retrato -->
+                <div class="flex gap-4 mb-5">
+                  @if (autorNuevoModel().retratoUrl.trim()) {
+                    <img
+                      [src]="autorNuevoModel().retratoUrl"
+                      alt="Preview de retrato"
+                      class="w-20 aspect-[3/4] object-cover rounded-md shadow-sm flex-shrink-0"
+                    />
+                  }
+                  <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">URL de retrato</label>
+                    <input
+                      [formField]="autorNuevoForm.retratoUrl"
+                      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    />
+                  </div>
+                </div>
+
+                <!-- Idioma -->
+                <div class="mb-5">
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Idioma</label>
+                  <input
+                    [formField]="autorNuevoForm.idioma"
+                    class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  />
+                </div>
+
+                <!-- País -->
+                <div class="mb-5">
+                  <label class="block text-sm font-medium text-gray-600 mb-1">País</label>
+
+                  @if (paisSeleccionado(); as p) {
+                    <div class="flex items-center gap-2 mb-3">
+                      <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-3 py-0.5 text-sm">
+                        {{ p.tipo === 'existente' ? p.nombre : p.datos.nombre }}
+                        @if (p.tipo === 'nuevo') {
+                          <span class="text-gray-400 text-xs">(nuevo)</span>
+                        }
+                      </span>
+                    </div>
+                  } @else {
+                    <p class="text-sm text-gray-400 italic mb-3">Sin país seleccionado.</p>
+                  }
+
+                  @if (paisesDisponiblesParaSeleccionar().length > 0) {
+                    <div class="flex gap-2 mb-3">
+                      <select
+                        [value]="paisIdParaSeleccionar()"
+                        (change)="paisIdParaSeleccionar.set($any($event.target).value)"
+                        class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                      >
+                        <option value="" disabled>Selecciona un país existente</option>
+                        @for (pais of paisesDisponiblesParaSeleccionar(); track pais.id) {
+                          <option [value]="pais.id">{{ pais.nombre }}</option>
+                        }
+                      </select>
+                      <button
+                        type="button"
+                        (click)="seleccionarPaisExistente()"
+                        class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                      >
+                        Usar
+                      </button>
+                    </div>
+                  }
+
+                  <div class="flex gap-2 items-start">
+                    <input
+                      type="text"
+                      placeholder="Nombre de un país nuevo"
+                      [value]="nombrePaisNuevo()"
+                      (input)="nombrePaisNuevo.set($any($event.target).value)"
+                      class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    />
+                    <button
+                      type="button"
+                      (click)="usarPaisNuevo()"
+                      class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                    >
+                      Usar país nuevo
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Nacimiento -->
+                <div class="border-t border-gray-100 pt-4 mb-5">
+                  <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">
+                    Nacimiento
+                  </label>
+
+                  <div class="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      (click)="cambiarModoNacimiento('exacta')"
+                      class="rounded-md border px-3 py-1 text-xs font-medium"
+                      [class.bg-orange-50]="modoNacimiento() === 'exacta'"
+                      [class.border-orange-300]="modoNacimiento() === 'exacta'"
+                      [class.text-orange-600]="modoNacimiento() === 'exacta'"
+                      [class.border-gray-300]="modoNacimiento() !== 'exacta'"
+                      [class.text-gray-500]="modoNacimiento() !== 'exacta'"
+                    >
+                      Fecha exacta
+                    </button>
+                    <button
+                      type="button"
+                      (click)="cambiarModoNacimiento('aproximado')"
+                      class="rounded-md border px-3 py-1 text-xs font-medium"
+                      [class.bg-orange-50]="modoNacimiento() === 'aproximado'"
+                      [class.border-orange-300]="modoNacimiento() === 'aproximado'"
+                      [class.text-orange-600]="modoNacimiento() === 'aproximado'"
+                      [class.border-gray-300]="modoNacimiento() !== 'aproximado'"
+                      [class.text-gray-500]="modoNacimiento() !== 'aproximado'"
+                    >
+                      Año aproximado
+                    </button>
+                  </div>
+
+                  @if (modoNacimiento() === 'exacta') {
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600 mb-1">Fecha de nacimiento</label>
+                      <input
+                        type="date"
+                        [formField]="autorNuevoForm.fechaNacimiento"
+                        class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                      />
+                    </div>
+                  } @else {
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600 mb-1">
+                        Año de nacimiento aproximado
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Usa negativos para a.C., ej. -106"
+                        [formField]="autorNuevoForm.anioNacimientoAprox"
+                        class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                      />
+                    </div>
+                  }
+                </div>
+
+                <!-- Defunción -->
+                <div class="border-t border-gray-100 pt-4 mb-5">
+                  <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">
+                    Defunción
+                  </label>
+
+                  <div class="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      (click)="cambiarModoDefuncion('exacta')"
+                      class="rounded-md border px-3 py-1 text-xs font-medium"
+                      [class.bg-orange-50]="modoDefuncion() === 'exacta'"
+                      [class.border-orange-300]="modoDefuncion() === 'exacta'"
+                      [class.text-orange-600]="modoDefuncion() === 'exacta'"
+                      [class.border-gray-300]="modoDefuncion() !== 'exacta'"
+                      [class.text-gray-500]="modoDefuncion() !== 'exacta'"
+                    >
+                      Fecha exacta
+                    </button>
+                    <button
+                      type="button"
+                      (click)="cambiarModoDefuncion('aproximado')"
+                      class="rounded-md border px-3 py-1 text-xs font-medium"
+                      [class.bg-orange-50]="modoDefuncion() === 'aproximado'"
+                      [class.border-orange-300]="modoDefuncion() === 'aproximado'"
+                      [class.text-orange-600]="modoDefuncion() === 'aproximado'"
+                      [class.border-gray-300]="modoDefuncion() !== 'aproximado'"
+                      [class.text-gray-500]="modoDefuncion() !== 'aproximado'"
+                    >
+                      Año aproximado
+                    </button>
+                  </div>
+
+                  @if (modoDefuncion() === 'exacta') {
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600 mb-1">Fecha de defunción</label>
+                      <input
+                        type="date"
+                        [formField]="autorNuevoForm.fechaDefuncion"
+                        class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                      />
+                    </div>
+                  } @else {
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600 mb-1">
+                        Año de defunción aproximado
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Usa negativos para a.C., ej. -43"
+                        [formField]="autorNuevoForm.anioDefuncionAprox"
+                        class="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                      />
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+          @if (errorImportar()) {
+            <p class="text-red-600 text-sm mt-6">{{ errorImportar() }}</p>
+          }
+
+          <!-- Acciones -->
+          <div class="mt-6 border-t border-gray-100 pt-6 flex gap-3">
+            <button
+              type="submit"
+              [disabled]="libroForm().invalid() || (esAutorNuevo() && autorNuevoForm().invalid()) || importando()"
+              class="rounded-md bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 disabled:opacity-50"
+            >
+              {{ importando() ? 'Agregando...' : 'Agregar a mi biblioteca' }}
+            </button>
+            <button
+              type="button"
+              (click)="cancelar()"
+              [disabled]="importando()"
+              class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+}

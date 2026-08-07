@@ -1,23 +1,19 @@
 import { Component, inject, signal, computed } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 import { BusquedaLibrosService } from '../busqueda-libros.service';
-import { PortadaLibro } from '../../../shared/components/portada-libro/portada-libro'; // ajustar ruta real si es distinta
+import { PortadaLibro } from '../../../shared/components/portada-libro/portada-libro';
 
 import {
   LibroExternoResponse,
   ResolverLibroRequest,
   ResolverLibroResponse,
-  ImportarLibroRequest,
-  AutorImportSchema,
-  GeneroImportSchema,
-  GeneroResolucion,
 } from '../../../core/models/busqueda-externa';
-import { EstadoLectura, LibroResponseDTO } from '../../../core/models/libro';
-import { ErrorResponseDTO } from '../../../core/models/error-response';
 
-// Los "pasos" del wizard. Cada uno tiene su propio bloque en el template
-// (buscar.html), controlado con @switch(paso()).
+// Los "pasos" del wizard. A partir de esta versión, el wizard solo cubre
+// hasta tener un autor ya decidido (existente o nuevo, nunca "dudoso") —
+// la revisión de datos del libro/autor y la confirmación de importación
+// viven en la página /libros/buscar/importar (ver ConfirmarImportar).
 //
 // 'busqueda'              -> input de query + lista de candidatos.
 // 'seleccion-autor'       -> solo si el candidato elegido trae más de un
@@ -27,12 +23,9 @@ import { ErrorResponseDTO } from '../../../core/models/error-response';
 // 'confirmacion-autor'    -> solo si /resolver devolvió autor en banda
 //                            "dudosa" (requiere_confirmacion): el usuario
 //                            decide si es el mismo autor existente o uno
-//                            distinto.
-// 'revision'              -> resumen final (autor y géneros ya resueltos,
-//                            selector de estado de lectura) antes de
-//                            confirmar el alta.
-// 'completado'            -> mensaje de éxito, con opción de buscar otro.
-type Paso = 'busqueda' | 'seleccion-autor' | 'confirmacion-autor' | 'revision' | 'completado';
+//                            distinto. Una vez decidido, se navega a
+//                            /libros/buscar/importar.
+type Paso = 'busqueda' | 'seleccion-autor' | 'confirmacion-autor';
 
 @Component({
   selector: 'app-buscar',
@@ -42,13 +35,11 @@ type Paso = 'busqueda' | 'seleccion-autor' | 'confirmacion-autor' | 'revision' |
 })
 export class Buscar {
   private busquedaLibrosService = inject(BusquedaLibrosService);
+  private router = inject(Router);
 
   paso = signal<Paso>('busqueda');
 
   // --- Paso 1: búsqueda ---
-  // Un solo campo de texto: se maneja como signal simple en vez de con
-  // Signal Forms (mismo patrón que "nombreGeneroNuevo" en libro-form.ts) —
-  // no amerita la maquinaria de un form completo para un único input.
   query = signal('');
   buscando = signal(false);
   errorBusqueda = signal<string | null>(null);
@@ -63,17 +54,6 @@ export class Buscar {
   resolviendo = signal(false);
   errorResolucion = signal<string | null>(null);
   resolucion = signal<ResolverLibroResponse | null>(null);
-
-  // Autor ya definido (existente o nuevo), listo para /importar. Se llena
-  // directo si /resolver devolvió "existente"/"nuevo", o después de que
-  // el usuario responda en el paso de confirmación si devolvió "dudoso".
-  autorFinal = signal<AutorImportSchema | null>(null);
-
-  // --- Paso final: revisión + importación ---
-  estadoElegido = signal<EstadoLectura>('POR_LEER');
-  importando = signal(false);
-  errorImportar = signal<string | null>(null);
-  libroImportado = signal<LibroResponseDTO | null>(null);
 
   puedeBuscar = computed(() => this.query().trim().length > 0 && !this.buscando());
 
@@ -158,10 +138,8 @@ export class Buscar {
           // Banda "dudosa": no se puede seguir sin que el usuario decida.
           this.paso.set('confirmacion-autor');
         } else {
-          // "existente" o "nuevo": ya se puede armar el autor final y
-          // saltar directo a la revisión.
-          this.autorFinal.set(this.mapearAutorResueltoAImport(respuesta.autor));
-          this.paso.set('revision');
+          // "existente" o "nuevo": ya se puede navegar a confirmar/importar.
+          this.irAConfirmar(respuesta, respuesta.autor);
         }
       },
       error: () => {
@@ -169,17 +147,6 @@ export class Buscar {
         this.resolviendo.set(false);
       },
     });
-  }
-
-  // Convierte un AutorResolucion ya confirmado (existente o nuevo, nunca
-  // "requiere_confirmacion") al formato que espera /importar.
-  private mapearAutorResueltoAImport(
-    autor: Exclude<ResolverLibroResponse['autor'], { tipo: 'requiere_confirmacion' }>
-  ): AutorImportSchema {
-    if (autor.tipo === 'existente') {
-      return { autor_id: autor.autor_id };
-    }
-    return { datos: autor.datos };
   }
 
   // ==========================================
@@ -190,60 +157,33 @@ export class Buscar {
     const resolucion = this.resolucion();
     if (!resolucion || resolucion.autor.tipo !== 'requiere_confirmacion') return;
 
-    this.autorFinal.set({ autor_id: resolucion.autor.autor_id_candidato });
-    this.paso.set('revision');
+    this.irAConfirmar(resolucion, {
+      tipo: 'existente',
+      autor_id: resolucion.autor.autor_id_candidato,
+      nombre: resolucion.autor.nombre_candidato,
+    });
   }
 
   confirmarEsAutorDistinto(): void {
     const resolucion = this.resolucion();
     if (!resolucion || resolucion.autor.tipo !== 'requiere_confirmacion') return;
 
-    this.autorFinal.set({ datos: resolucion.autor.datos_si_es_nuevo });
-    this.paso.set('revision');
-  }
-
-  // ==========================================
-  // Paso final: importar (/importar)
-  // ==========================================
-
-  confirmarImportacion(): void {
-    const resolucion = this.resolucion();
-    const autor = this.autorFinal();
-    if (!resolucion || !autor) return;
-
-    const request: ImportarLibroRequest = {
-      titulo: resolucion.titulo,
-      anio_publicacion: resolucion.anio_publicacion,
-      descripcion: resolucion.descripcion,
-      portada_url: resolucion.portada_url,
-      isbn: resolucion.isbn,
-      estado: this.estadoElegido(),
-      autor,
-      generos: resolucion.generos.map(this.mapearGeneroAImport),
-    };
-
-    this.errorImportar.set(null);
-    this.importando.set(true);
-
-    this.busquedaLibrosService.importar(request).subscribe({
-      next: (libro) => {
-        this.libroImportado.set(libro);
-        this.importando.set(false);
-        this.paso.set('completado');
-      },
-      error: (err: HttpErrorResponse) => {
-        const errorDto = err.error as ErrorResponseDTO;
-        this.errorImportar.set(errorDto?.mensaje ?? 'No se pudo agregar el libro a la biblioteca.');
-        this.importando.set(false);
-      },
+    this.irAConfirmar(resolucion, {
+      tipo: 'nuevo',
+      datos: resolucion.autor.datos_si_es_nuevo,
     });
   }
 
-  private mapearGeneroAImport(genero: GeneroResolucion): GeneroImportSchema {
-    if (genero.tipo === 'existente') {
-      return { genero_id: genero.genero_id };
-    }
-    return { datos: genero.datos };
+  // ==========================================
+  // Navegación a la página de confirmación/importación
+  // ==========================================
+
+  private irAConfirmar(
+    resolucion: ResolverLibroResponse,
+    autor: Exclude<ResolverLibroResponse['autor'], { tipo: 'requiere_confirmacion' }>
+  ): void {
+    this.busquedaLibrosService.guardarSeleccion({ resolucion, autor });
+    this.router.navigate(['/libros/buscar/importar']);
   }
 
   // ==========================================
@@ -257,12 +197,8 @@ export class Buscar {
     this.candidatoSeleccionado.set(null);
     this.autorElegido.set('');
     this.resolucion.set(null);
-    this.autorFinal.set(null);
-    this.estadoElegido.set('POR_LEER');
-    this.libroImportado.set(null);
     this.errorBusqueda.set(null);
     this.errorResolucion.set(null);
-    this.errorImportar.set(null);
     this.paso.set('busqueda');
   }
 }

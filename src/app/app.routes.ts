@@ -10,6 +10,7 @@ import { AutorForm } from './features/autores/autor-form/autor-form';
 import { Dashboard } from './features/estadisticas/dashboard/dashboard';
 import { authGuard } from './core/guards/auth-guard';
 import { Buscar } from './features/libros/buscar/buscar';
+import { ConfirmarImportar } from './features/libros/confirmar-importar/confirmar-importar';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -17,6 +18,7 @@ export const routes: Routes = [
   { path: 'libros', component: LibroList, canActivate: [authGuard] },
   { path: 'libros/gestionar', component: LibroForm, canActivate: [authGuard] },
   { path: 'libros/buscar', component: Buscar, canActivate: [authGuard] },
+  { path: 'libros/buscar/importar', component: ConfirmarImportar, canActivate: [authGuard] },
   { path: 'libros/:id', component: LibroDetail, canActivate: [authGuard] },
   { path: 'autores', component: AutorList, canActivate: [authGuard] },
   { path: 'autores/gestionar', component: AutorForm, canActivate: [authGuard] },

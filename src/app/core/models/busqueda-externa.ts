@@ -101,7 +101,7 @@ export interface AutorResolucionPendiente {
   autor_id_candidato: number;
   nombre_candidato: string;
   datos_si_es_nuevo: AutorCreateSchema;
-  motivo: string;
+  motivo: string; 
 }
 
 export type AutorResolucion =
@@ -157,4 +157,4 @@ export interface ImportarLibroRequest {
   estado: string;
   autor: AutorImportSchema;
   generos: GeneroImportSchema[];
-}
+} 
