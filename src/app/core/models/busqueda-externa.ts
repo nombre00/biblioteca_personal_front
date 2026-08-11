@@ -8,7 +8,7 @@
 // duplicaría el mantenimiento cada vez que schema.py cambie.
 //
 // Excepción: la respuesta de /importar NO sigue este patrón, porque
-// agentes-ia la reenvía tal cual desde Java (ver busqueda-libros.service.ts).
+// agentes-ia la reenvía tal cual desde Java (ver busqueda-libros.service.ts). 
 
 // ==========================================
 // 1. Búsqueda (paso 1: /buscar)
@@ -17,6 +17,9 @@
 export interface BusquedaLibroRequest {
   query: string;
   max_results?: number; // default 40 en el backend si se omite
+  // Offset de paginación (0-based) que se reenvía tal cual a Google Books.
+  // start_index = (pagina - 1) * max_results. Default 0 en el backend si se omite.
+  start_index?: number;
 }
 
 export interface LibroExternoResponse {
@@ -29,6 +32,15 @@ export interface LibroExternoResponse {
   descripcion?: string;
   portada_url?: string;
   isbn?: string | null;
+}
+
+// Envoltorio de la respuesta de /buscar: la página actual de resultados
+// más el total real que reporta Google Books para la query completa (no
+// la cantidad de items en esta página). total_items se usa para calcular
+// cuántas páginas hay disponibles.
+export interface BusquedaLibrosResponse {
+  items: LibroExternoResponse[];
+  total_items: number;
 }
 
 // ==========================================
@@ -157,4 +169,4 @@ export interface ImportarLibroRequest {
   estado: string;
   autor: AutorImportSchema;
   generos: GeneroImportSchema[];
-} 
+}

@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { LibroResponseDTO } from '../../core/models/libro';
 import {
   BusquedaLibroRequest,
+  BusquedaLibrosResponse,
   LibroExternoResponse,
   ResolverLibroRequest,
   ResolverLibroResponse,
@@ -34,8 +35,8 @@ export class BusquedaLibrosService {
   // definido en busqueda-externa.ts — no hay traducción de nombres acá.
   private baseUrl = `${environment.gatewayUrl}/busqueda-libros`;
 
-  buscar(request: BusquedaLibroRequest): Observable<LibroExternoResponse[]> {
-    return this.http.post<LibroExternoResponse[]>(`${this.baseUrl}/buscar`, request);
+  buscar(request: BusquedaLibroRequest): Observable<BusquedaLibrosResponse> {
+    return this.http.post<BusquedaLibrosResponse>(`${this.baseUrl}/buscar`, request);
   }
 
   resolver(request: ResolverLibroRequest): Observable<ResolverLibroResponse> {
@@ -51,6 +52,49 @@ export class BusquedaLibrosService {
   }
 
   // ==========================================
+  // Estado de la búsqueda activa (query, resultados, paginación)
+  // ==========================================
+  //
+  // Vive acá (no en el componente Buscar) para sobrevivir la navegación
+  // ida y vuelta a /libros/buscar/importar: si el usuario cancela una
+  // importación y vuelve a /libros/buscar, ve la misma página de
+  // resultados en la que se había quedado, sin tener que rebuscar.
+  //
+  // Igual que seleccionActual más abajo: en memoria nada más (sin
+  // localStorage/sessionStorage), se pierde solo si se recarga la pestaña.
+  private _query = signal('');
+  private _resultados = signal<LibroExternoResponse[]>([]);
+  private _totalItems = signal(0);
+  private _paginaActual = signal(1);
+  private _busquedaRealizada = signal(false); // distingue "0 resultados" de "aún no se buscó"
+
+  readonly query = this._query.asReadonly();
+  readonly resultados = this._resultados.asReadonly();
+  readonly totalItems = this._totalItems.asReadonly();
+  readonly paginaActual = this._paginaActual.asReadonly();
+  readonly busquedaRealizada = this._busquedaRealizada.asReadonly();
+
+  guardarResultadosBusqueda(
+    query: string,
+    pagina: number,
+    respuesta: BusquedaLibrosResponse
+  ): void {
+    this._query.set(query);
+    this._paginaActual.set(pagina);
+    this._resultados.set(respuesta.items);
+    this._totalItems.set(respuesta.total_items);
+    this._busquedaRealizada.set(true);
+  }
+
+  limpiarBusqueda(): void {
+    this._query.set('');
+    this._resultados.set([]);
+    this._totalItems.set(0);
+    this._paginaActual.set(1);
+    this._busquedaRealizada.set(false);
+  }
+
+  // ==========================================
   // Estado compartido entre /libros/buscar y /libros/buscar/importar
   // ==========================================
   //
@@ -61,7 +105,7 @@ export class BusquedaLibrosService {
   // Vive en memoria nada más (signal en un servicio root, sin persistencia
   // en localStorage/sessionStorage): se pierde si el usuario recarga la
   // página de confirmación directamente. Ese caso se maneja redirigiendo
-  // de vuelta a /libros/buscar (ver ConfirmarImportar.ngOnInit).
+  // de vuelta a /libros/buscar (ver ConfirmarImportar.ngOnInit). 
   private seleccionActual = signal<SeleccionParaImportar | null>(null);
 
   guardarSeleccion(seleccion: SeleccionParaImportar): void {

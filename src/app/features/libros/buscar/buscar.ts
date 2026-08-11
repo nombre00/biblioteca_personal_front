@@ -37,14 +37,32 @@ export class Buscar {
   private busquedaLibrosService = inject(BusquedaLibrosService);
   private router = inject(Router);
 
+  // Tamaño de página fijo, tanto para max_results de Google Books como
+  // para calcular start_index y el total de páginas.
+  readonly resultadosPorPagina = 40;
+
   paso = signal<Paso>('busqueda');
 
   // --- Paso 1: búsqueda ---
-  query = signal('');
+  // El input de texto es local (lo que el usuario está tipeando, todavía
+  // no buscado). Se inicializa con la última query buscada para que, al
+  // volver desde /libros/buscar/importar, el campo no aparezca vacío.
+  queryInput = signal(this.busquedaLibrosService.query());
   buscando = signal(false);
   errorBusqueda = signal<string | null>(null);
-  resultados = signal<LibroExternoResponse[]>([]);
-  yaSeBusco = signal(false); // para distinguir "sin resultados" de "aún no buscaste"
+
+  // Resultados, página actual y total de items viven en el service (no
+  // acá) para sobrevivir la ida y vuelta a /libros/buscar/importar.
+  resultados = this.busquedaLibrosService.resultados;
+  totalItems = this.busquedaLibrosService.totalItems;
+  paginaActual = this.busquedaLibrosService.paginaActual;
+  yaSeBusco = this.busquedaLibrosService.busquedaRealizada;
+
+  totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.totalItems() / this.resultadosPorPagina))
+  );
+  puedeIrAnterior = computed(() => this.paginaActual() > 1);
+  puedeIrSiguiente = computed(() => this.paginaActual() < this.totalPaginas());
 
   // --- Selección de candidato y autor ---
   candidatoSeleccionado = signal<LibroExternoResponse | null>(null);
@@ -55,30 +73,64 @@ export class Buscar {
   errorResolucion = signal<string | null>(null);
   resolucion = signal<ResolverLibroResponse | null>(null);
 
-  puedeBuscar = computed(() => this.query().trim().length > 0 && !this.buscando());
+  puedeBuscar = computed(() => this.queryInput().trim().length > 0 && !this.buscando());
 
   // ==========================================
   // Paso 1: búsqueda
   // ==========================================
 
   buscar(): void {
-    const query = this.query().trim();
+    const query = this.queryInput().trim();
     if (!query) return;
 
+    // Búsqueda nueva (no "cargar más"): siempre arranca en la página 1,
+    // aunque la búsqueda anterior haya quedado en otra página.
+    this.ejecutarBusqueda(query, 1);
+  }
+
+  irAPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas() || pagina === this.paginaActual()) return;
+
+    const query = this.busquedaLibrosService.query();
+    if (!query) return;
+
+    this.ejecutarBusqueda(query, pagina);
+  }
+
+  irAPrimeraPagina(): void {
+    this.irAPagina(1);
+  }
+
+  irAPaginaAnterior(): void {
+    this.irAPagina(this.paginaActual() - 1);
+  }
+
+  irASiguientePagina(): void {
+    this.irAPagina(this.paginaActual() + 1);
+  }
+
+  irAUltimaPagina(): void {
+    this.irAPagina(this.totalPaginas());
+  }
+
+  private ejecutarBusqueda(query: string, pagina: number): void {
     this.errorBusqueda.set(null);
     this.buscando.set(true);
 
-    this.busquedaLibrosService.buscar({ query, max_results: 40 }).subscribe({
-      next: (resultados) => {
-        this.resultados.set(resultados);
-        this.yaSeBusco.set(true);
-        this.buscando.set(false);
-      },
-      error: () => {
-        this.errorBusqueda.set('No se pudo completar la búsqueda. Intenta de nuevo.');
-        this.buscando.set(false);
-      },
-    });
+    const startIndex = (pagina - 1) * this.resultadosPorPagina;
+
+    this.busquedaLibrosService
+      .buscar({ query, max_results: this.resultadosPorPagina, start_index: startIndex })
+      .subscribe({
+        next: (respuesta) => {
+          this.busquedaLibrosService.guardarResultadosBusqueda(query, pagina, respuesta);
+          this.buscando.set(false);
+        },
+        error: () => {
+          this.errorBusqueda.set('No se pudo completar la búsqueda. Intenta de nuevo.');
+          this.buscando.set(false);
+        },
+      });
   }
 
   // ==========================================
@@ -138,7 +190,7 @@ export class Buscar {
           // Banda "dudosa": no se puede seguir sin que el usuario decida.
           this.paso.set('confirmacion-autor');
         } else {
-          // "existente" o "nuevo": ya se puede navegar a confirmar/importar.
+          // "existente" o "nuevo": ya se puede navegar a confirmar/importar. 
           this.irAConfirmar(respuesta, respuesta.autor);
         }
       },
@@ -191,9 +243,8 @@ export class Buscar {
   // ==========================================
 
   buscarOtro(): void {
-    this.query.set('');
-    this.resultados.set([]);
-    this.yaSeBusco.set(false);
+    this.queryInput.set('');
+    this.busquedaLibrosService.limpiarBusqueda();
     this.candidatoSeleccionado.set(null);
     this.autorElegido.set('');
     this.resolucion.set(null);

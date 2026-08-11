@@ -12,8 +12,8 @@
           <input
             type="text"
             placeholder="Título o autor a buscar..."
-            [value]="query()"
-            (input)="query.set($any($event.target).value)"
+            [value]="queryInput()"
+            (input)="queryInput.set($any($event.target).value)"
             class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
           />
           <button
@@ -75,6 +75,52 @@
             </button>
           }
         </div>
+
+        <!-- ========================================== -->
+        <!-- Paginación clásica: Primera / Anterior / Página X de Y / Siguiente / Última -->
+        <!-- Oculta si hay una sola página de resultados. -->
+        <!-- ========================================== -->
+        @if (totalPaginas() > 1) {
+          <div class="flex items-center justify-center gap-2 mt-6">
+            <button
+              type="button"
+              (click)="irAPrimeraPagina()"
+              [disabled]="!puedeIrAnterior() || buscando()"
+              class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-3 py-1.5 disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              « Primera
+            </button>
+            <button
+              type="button"
+              (click)="irAPaginaAnterior()"
+              [disabled]="!puedeIrAnterior() || buscando()"
+              class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-3 py-1.5 disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              ‹ Anterior
+            </button>
+
+            <span class="text-sm text-gray-500 px-3">
+              Página {{ paginaActual() }} de {{ totalPaginas() }}
+            </span>
+
+            <button
+              type="button"
+              (click)="irASiguientePagina()"
+              [disabled]="!puedeIrSiguiente() || buscando()"
+              class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-3 py-1.5 disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              Siguiente ›
+            </button>
+            <button
+              type="button"
+              (click)="irAUltimaPagina()"
+              [disabled]="!puedeIrSiguiente() || buscando()"
+              class="rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-3 py-1.5 disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              Última »
+            </button>
+          </div>
+        }
       }
     }
 
@@ -123,7 +169,7 @@
     }
 
     <!-- ========================================== -->
-    <!-- PASO: confirmación de autor dudoso -->
+    <!-- PASO: confirmación de autor dudoso --> 
     <!-- ========================================== -->
     @case ('confirmacion-autor') {
       @if (resolucion()?.autor?.tipo === 'requiere_confirmacion') {
