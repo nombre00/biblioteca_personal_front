@@ -1,30 +1,22 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { form, FormField, submit, required } from '@angular/forms/signals';
+import { form, submit, required } from '@angular/forms/signals';
 
 import { LibroService } from '../libro.service';
 import { GeneroService } from '../genero.service';
 import { AutorService } from '../../autores/autor.service';
+import { CamposLibro, CamposLibroModel } from '../../../shared/components/campos-libro/campos-libro';
 
-import { LibroDTO, LibroResponseDTO, EstadoLectura } from '../../../core/models/libro';
+import { LibroDTO, LibroResponseDTO } from '../../../core/models/libro';
 import { GeneroDTO } from '../../../core/models/genero';
 import { AutorResponseDTO } from '../../../core/models/autor';
 import { ErrorResponseDTO } from '../../../core/models/error-response';
 
-interface LibroFormModel {
-  titulo: string;
-  isbn: string;
-  portadaUrl: string;
-  estado: EstadoLectura;
-  autorId: string;
-  generoIds: number[];
-  generoParaAgregar: string;
-  anioPublicacion: string;
-  anioLectura: string;
-  fechaInicio: string;
-  fechaTermino: string;
-}
+// El shape del formulario vive en campos-libro.ts (CamposLibroModel), no
+// acá — este alias evita renombrar todas las referencias existentes a
+// LibroFormModel dentro de este archivo.
+type LibroFormModel = CamposLibroModel;
 
 const MODELO_VACIO: LibroFormModel = {
   titulo: '',
@@ -42,7 +34,7 @@ const MODELO_VACIO: LibroFormModel = {
 
 @Component({
   selector: 'app-libro-form',
-  imports: [FormField],
+  imports: [CamposLibro],
   templateUrl: './libro-form.html',
   styleUrl: './libro-form.scss',
 })
@@ -187,23 +179,9 @@ export class LibroForm implements OnInit {
     });
   }
 
-  agregarGenero(): void {
-    const idStr = this.model().generoParaAgregar;
-    if (!idStr) return;
-    const id = Number(idStr);
-    this.model.update((m) => ({
-      ...m,
-      generoIds: [...m.generoIds, id],
-      generoParaAgregar: '',
-    }));
-  }
-
-  quitarGenero(id: number): void {
-    this.model.update((m) => ({
-      ...m,
-      generoIds: m.generoIds.filter((gid) => gid !== id),
-    }));
-  }
+  // agregarGenero() y quitarGenero() se movieron a CamposLibro: no llaman
+  // a ningún backend, son mutación directa del arreglo generoIds sobre el
+  // mismo signal `model` que este componente sigue siendo dueño de leer.
 
   crearGeneroNuevo(): void {
     const nombre = this.nombreGeneroNuevo().trim();

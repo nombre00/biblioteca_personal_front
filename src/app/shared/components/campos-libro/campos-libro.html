@@ -1,0 +1,207 @@
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+  <!-- Columna izquierda: portada grande -->
+  <div class="md:col-span-1">
+    <div class="md:sticky md:top-8">
+      @if (datosLibro()().portadaUrl.trim()) {
+        <img
+          [src]="datosLibro()().portadaUrl"
+          alt="Preview de portada"
+          class="w-full aspect-[2/3] object-cover rounded-md shadow-md"
+        />
+      } @else {
+        <div class="w-full aspect-[2/3] flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-16 h-16 text-gray-300">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25a8.987 8.987 0 0 0-3-.512c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
+          </svg>
+        </div>
+      }
+
+      <div class="mt-4">
+        <label class="block text-sm font-medium text-gray-600 mb-1">URL de portada</label>
+        <input
+          [formField]="libroForm().portadaUrl"
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna derecha: resto del form -->
+  <div class="md:col-span-2">
+    <!-- Título -->
+    <div class="mb-5">
+      <label class="block text-sm font-medium text-gray-600 mb-1">Título</label>
+      <input
+        [formField]="libroForm().titulo"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+      />
+      @if (libroForm().titulo().touched() && libroForm().titulo().errors().length) {
+        <p class="text-red-600 text-xs mt-1">{{ libroForm().titulo().errors()[0].message }}</p>
+      }
+    </div>
+
+    <!-- ISBN -->
+    <div class="mb-5">
+      <label class="block text-sm font-medium text-gray-600 mb-1">ISBN</label>
+      <input
+        [formField]="libroForm().isbn"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+      />
+    </div>
+
+    <!-- Estado + Autor -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+        <select
+          [formField]="libroForm().estado"
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+        >
+          <option value="POR_LEER">Por leer</option>
+          <option value="LEYENDO">Leyendo</option>
+          <option value="LEIDO">Leído</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Autor</label>
+        @if (bloquearAutor()) {
+          <div class="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+            {{ nombreAutorBloqueado() }}
+          </div>
+        } @else {
+          <select
+            [formField]="libroForm().autorId"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          >
+            <option value="" disabled>Selecciona un autor</option>
+            @for (autor of autoresOrdenados(); track autor.id) {
+              <option [value]="autor.id">{{ autor.nombre }} ({{ autor.pais.nombre }})</option>
+            }
+          </select>
+          @if (libroForm().autorId().touched() && libroForm().autorId().errors().length) {
+            <p class="text-red-600 text-xs mt-1">{{ libroForm().autorId().errors()[0].message }}</p>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Géneros -->
+    <fieldset class="mt-6 border-t border-gray-100 pt-4">
+      <legend class="text-xs font-semibold uppercase text-gray-400 mb-3">Géneros</legend>
+
+      @if (generosSeleccionados().length === 0) {
+        <p class="text-sm text-gray-400 italic mb-3">Ningún género seleccionado todavía.</p>
+      } @else {
+        <div class="flex flex-wrap gap-2 mb-4">
+          @for (genero of generosSeleccionados(); track genero.id) {
+            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full pl-3 pr-1 py-0.5 text-xs">
+              {{ genero.nombre }}
+              <button
+                type="button"
+                (click)="quitarGenero(genero.id!)"
+                class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500"
+                aria-label="Quitar género"
+              >
+                ×
+              </button>
+            </span>
+          }
+        </div>
+      }
+
+      @if (generosDisponibles().length > 0) {
+        <div class="flex gap-2 mb-4">
+          <select
+            [formField]="libroForm().generoParaAgregar"
+            class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          >
+            <option value="" disabled>Selecciona un género</option>
+            @for (genero of generosDisponibles(); track genero.id) {
+              <option [value]="genero.id">{{ genero.nombre }}</option>
+            }
+          </select>
+          <button
+            type="button"
+            (click)="agregarGenero()"
+            class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            Agregar
+          </button>
+        </div>
+      }
+
+      <div class="flex gap-2 items-start">
+        <input
+          type="text"
+          placeholder="Nombre de un género nuevo"
+          [value]="nombreGeneroNuevo()"
+          (input)="nombreGeneroNuevo.set($any($event.target).value)"
+          class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+        />
+        <button
+          type="button"
+          (click)="onCrearGeneroNuevo()"
+          [disabled]="!nombreGeneroNuevo().trim() || creandoGenero()"
+          class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+        >
+          {{ creandoGenero() ? 'Creando...' : 'Crear género' }}
+        </button>
+      </div>
+      @if (errorGenero()) {
+        <p class="text-red-600 text-xs mt-2">{{ errorGenero() }}</p>
+      }
+    </fieldset>
+
+    <!-- Publicación y lectura -->
+    <div class="mt-6 border-t border-gray-100 pt-4">
+      <label class="block text-xs font-semibold uppercase text-gray-400 mb-3">
+        Publicación y lectura
+      </label>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Año de publicación</label>
+          <input
+            type="number"
+            placeholder="Usa negativos para a.C., ej. -400"
+            [formField]="libroForm().anioPublicacion"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Año de lectura (aprox.)</label>
+          <input
+            type="number"
+            placeholder="Para libros leídos hace tiempo"
+            [formField]="libroForm().anioLectura"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Fecha de inicio de lectura</label>
+          <input
+            type="date"
+            [formField]="libroForm().fechaInicio"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Fecha de término de lectura</label>
+          <input
+            type="date"
+            [formField]="libroForm().fechaTermino"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- fin columna derecha -->
+</div>
