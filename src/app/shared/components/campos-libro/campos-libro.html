@@ -66,92 +66,20 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-600 mb-1">Autor</label>
-        @if (bloquearAutor()) {
-          <div class="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
-            {{ nombreAutorBloqueado() }}
-          </div>
-        } @else {
-          <select
-            [formField]="libroForm().autorId"
-            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
-          >
-            <option value="" disabled>Selecciona un autor</option>
-            @for (autor of autoresOrdenados(); track autor.id) {
-              <option [value]="autor.id">{{ autor.nombre }} ({{ autor.pais.nombre }})</option>
-            }
-          </select>
-          @if (libroForm().autorId().touched() && libroForm().autorId().errors().length) {
-            <p class="text-red-600 text-xs mt-1">{{ libroForm().autorId().errors()[0].message }}</p>
-          }
-        }
+        <!-- Autor no es un campo propio de este componente: en libro-form
+             es un <select> por id ya persistido; en confirmar-importar
+             puede ser un autor nuevo sin id todavía. Cada página resuelve
+             el suyo y lo proyecta acá. -->
+        <ng-content select="[campos-libro-autor]"></ng-content>
       </div>
     </div>
 
     <!-- Géneros -->
     <fieldset class="mt-6 border-t border-gray-100 pt-4">
       <legend class="text-xs font-semibold uppercase text-gray-400 mb-3">Géneros</legend>
-
-      @if (generosSeleccionados().length === 0) {
-        <p class="text-sm text-gray-400 italic mb-3">Ningún género seleccionado todavía.</p>
-      } @else {
-        <div class="flex flex-wrap gap-2 mb-4">
-          @for (genero of generosSeleccionados(); track genero.id) {
-            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full pl-3 pr-1 py-0.5 text-xs">
-              {{ genero.nombre }}
-              <button
-                type="button"
-                (click)="quitarGenero(genero.id!)"
-                class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500"
-                aria-label="Quitar género"
-              >
-                ×
-              </button>
-            </span>
-          }
-        </div>
-      }
-
-      @if (generosDisponibles().length > 0) {
-        <div class="flex gap-2 mb-4">
-          <select
-            [formField]="libroForm().generoParaAgregar"
-            class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
-          >
-            <option value="" disabled>Selecciona un género</option>
-            @for (genero of generosDisponibles(); track genero.id) {
-              <option [value]="genero.id">{{ genero.nombre }}</option>
-            }
-          </select>
-          <button
-            type="button"
-            (click)="agregarGenero()"
-            class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
-          >
-            Agregar
-          </button>
-        </div>
-      }
-
-      <div class="flex gap-2 items-start">
-        <input
-          type="text"
-          placeholder="Nombre de un género nuevo"
-          [value]="nombreGeneroNuevo()"
-          (input)="nombreGeneroNuevo.set($any($event.target).value)"
-          class="flex-1 max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
-        />
-        <button
-          type="button"
-          (click)="onCrearGeneroNuevo()"
-          [disabled]="!nombreGeneroNuevo().trim() || creandoGenero()"
-          class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-        >
-          {{ creandoGenero() ? 'Creando...' : 'Crear género' }}
-        </button>
-      </div>
-      @if (errorGenero()) {
-        <p class="text-red-600 text-xs mt-2">{{ errorGenero() }}</p>
-      }
+      <!-- Mismo criterio que Autor: en libro-form son ids ya persistidos,
+           en confirmar-importar pueden ser géneros nuevos sin id. -->
+      <ng-content select="[campos-libro-generos]"></ng-content>
     </fieldset>
 
     <!-- Publicación y lectura -->

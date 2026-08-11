@@ -9,22 +9,11 @@ import { PaisService } from '../pais.service';
 import { AutorDTO, AutorResponseDTO } from '../../../core/models/autor';
 import { PaisDTO } from '../../../core/models/pais';
 import { ErrorResponseDTO } from '../../../core/models/error-response';
+import { CamposAutor, CamposAutorModel } from '../../../shared/components/campos-autor/campos-autor';
 
-interface AutorFormModel {
-  nombre: string;
-  idioma: string;
-  paisId: string;
-  retratoUrl: string;
-  fechaNacimiento: string;
-  anioNacimientoAprox: string;
-  fechaDefuncion: string;
-  anioDefuncionAprox: string;
-}
-
-const MODELO_VACIO: AutorFormModel = {
+const MODELO_VACIO: CamposAutorModel = {
   nombre: '',
   idioma: '',
-  paisId: '',
   retratoUrl: '',
   fechaNacimiento: '',
   anioNacimientoAprox: '',
@@ -34,7 +23,7 @@ const MODELO_VACIO: AutorFormModel = {
 
 @Component({
   selector: 'app-autor-form',
-  imports: [FormField],
+  imports: [FormField, CamposAutor],
   templateUrl: './autor-form.html',
   styleUrl: './autor-form.scss',
 })
@@ -63,15 +52,27 @@ export class AutorForm implements OnInit {
   errorPais = signal<string | null>(null);
   creandoPais = signal(false);
 
-  // Modo de ingreso para fechas de nacimiento y defunción
+  // Valor inicial para el toggle de fechas, fijado acá al cargar un autor
+  // existente. El toggle en sí (clicks, limpieza del campo opuesto) ahora
+  // vive adentro de CamposAutor — se conecta por binding de dos vías.
   modoNacimiento = signal<'exacta' | 'aproximado'>('exacta');
   modoDefuncion = signal<'exacta' | 'aproximado'>('exacta');
 
-  protected readonly model = signal<AutorFormModel>({ ...MODELO_VACIO });
+  protected readonly model = signal<CamposAutorModel>({ ...MODELO_VACIO });
 
   protected readonly autorForm = form(this.model, (s) => {
     required(s.nombre, { message: 'El nombre es obligatorio' });
-    required(s.paisId, { message: 'Debes seleccionar un país' });
+  });
+
+  // País vive fuera de CamposAutorModel (el componente no lo toca) en su
+  // propio signal + form chico — mismo criterio que autorNuevoModel /
+  // paisSeleccionado en confirmar-importar. Al ser un modelo primitivo
+  // (string), el form resultante ES el Field de todo el valor: se bindea
+  // directo con [formField]="paisId", sin subcampos.
+  protected readonly paisId = signal('');
+
+  protected readonly paisForm = form(this.paisId, (s) => {
+    required(s, { message: 'Debes seleccionar un país' });
   });
 
   autoresOrdenados = computed(() =>
@@ -123,6 +124,7 @@ export class AutorForm implements OnInit {
 
     if (id === 0) {
       this.model.set({ ...MODELO_VACIO });
+      this.paisId.set('');
       this.modoNacimiento.set('exacta');
       this.modoDefuncion.set('exacta');
       return;
@@ -134,7 +136,6 @@ export class AutorForm implements OnInit {
         this.model.set({
           nombre: autor.nombre,
           idioma: autor.idioma ?? '',
-          paisId: String(autor.pais.id!),
           retratoUrl: autor.retratoUrl ?? '',
           fechaNacimiento: autor.fechaNacimiento ?? '',
           anioNacimientoAprox:
@@ -143,6 +144,7 @@ export class AutorForm implements OnInit {
           anioDefuncionAprox:
             autor.anioDefuncionAprox != null ? String(autor.anioDefuncionAprox) : '',
         });
+        this.paisId.set(String(autor.pais.id!));
         this.modoNacimiento.set(autor.anioNacimientoAprox != null ? 'aproximado' : 'exacta');
         this.modoDefuncion.set(autor.anioDefuncionAprox != null ? 'aproximado' : 'exacta');
         this.cargandoAutor.set(false);
@@ -152,24 +154,6 @@ export class AutorForm implements OnInit {
         this.cargandoAutor.set(false);
       },
     });
-  }
-
-  cambiarModoNacimiento(modo: 'exacta' | 'aproximado'): void {
-    this.modoNacimiento.set(modo);
-    this.model.update((m) => ({
-      ...m,
-      fechaNacimiento: modo === 'exacta' ? m.fechaNacimiento : '',
-      anioNacimientoAprox: modo === 'aproximado' ? m.anioNacimientoAprox : '',
-    }));
-  }
-
-  cambiarModoDefuncion(modo: 'exacta' | 'aproximado'): void {
-    this.modoDefuncion.set(modo);
-    this.model.update((m) => ({
-      ...m,
-      fechaDefuncion: modo === 'exacta' ? m.fechaDefuncion : '',
-      anioDefuncionAprox: modo === 'aproximado' ? m.anioDefuncionAprox : '',
-    }));
   }
 
   crearPaisNuevo(): void {
@@ -185,7 +169,7 @@ export class AutorForm implements OnInit {
     this.paisService.crear({ nombre }).subscribe({
       next: (creado) => {
         this.paises.update((lista) => [...lista, creado]);
-        this.model.update((m) => ({ ...m, paisId: String(creado.id!) }));
+        this.paisId.set(String(creado.id!));
         this.nombrePaisNuevo.set('');
         this.creandoPais.set(false);
       },
@@ -199,6 +183,13 @@ export class AutorForm implements OnInit {
 
   onSubmit(): void {
     submit(this.autorForm, async () => {
+      // paisForm se valida manualmente acá — submit() de Signal Forms no
+      // soporta validar dos forms en un solo llamado, mismo patrón que
+      // confirmar-importar usa con libroForm + autorNuevoForm.
+      if (this.paisForm().invalid()) {
+        return;
+      }
+
       this.errorEnvio.set(null);
       this.mensajeExito.set(null);
       this.enviando.set(true);
@@ -207,7 +198,7 @@ export class AutorForm implements OnInit {
       const dto: AutorDTO = {
         nombre: m.nombre,
         idioma: m.idioma.trim() ? m.idioma.trim() : undefined,
-        paisId: Number(m.paisId),
+        paisId: Number(this.paisId()),
         retratoUrl: m.retratoUrl.trim() ? m.retratoUrl.trim() : undefined,
         fechaNacimiento: m.fechaNacimiento.trim() ? m.fechaNacimiento.trim() : undefined,
         anioNacimientoAprox: m.anioNacimientoAprox.trim()
@@ -262,6 +253,7 @@ export class AutorForm implements OnInit {
         this.autores.update((lista) => lista.filter((a) => a.id !== id));
         this.autorSeleccionadoId.set(0);
         this.model.set({ ...MODELO_VACIO });
+        this.paisId.set('');
         this.eliminando.set(false);
       },
       error: () => {

@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { form, submit, required } from '@angular/forms/signals';
+import { form, FormField, submit, required } from '@angular/forms/signals';
 
 import { LibroService } from '../libro.service';
 import { GeneroService } from '../genero.service';
@@ -13,19 +13,11 @@ import { GeneroDTO } from '../../../core/models/genero';
 import { AutorResponseDTO } from '../../../core/models/autor';
 import { ErrorResponseDTO } from '../../../core/models/error-response';
 
-// El shape del formulario vive en campos-libro.ts (CamposLibroModel), no
-// acá — este alias evita renombrar todas las referencias existentes a
-// LibroFormModel dentro de este archivo.
-type LibroFormModel = CamposLibroModel;
-
-const MODELO_VACIO: LibroFormModel = {
+const MODELO_VACIO: CamposLibroModel = {
   titulo: '',
   isbn: '',
   portadaUrl: '',
   estado: 'POR_LEER',
-  autorId: '',
-  generoIds: [],
-  generoParaAgregar: '',
   anioPublicacion: '',
   anioLectura: '',
   fechaInicio: '',
@@ -34,7 +26,7 @@ const MODELO_VACIO: LibroFormModel = {
 
 @Component({
   selector: 'app-libro-form',
-  imports: [CamposLibro],
+  imports: [FormField, CamposLibro],
   templateUrl: './libro-form.html',
   styleUrl: './libro-form.scss',
 })
@@ -59,19 +51,35 @@ export class LibroForm implements OnInit {
   mensajeExito = signal<string | null>(null);
 
   eliminando = signal(false);
-  errorEliminar = signal<string | null>(null); 
+  errorEliminar = signal<string | null>(null);
 
   nombreGeneroNuevo = signal('');
   errorGenero = signal<string | null>(null);
   creandoGenero = signal(false);
 
-  protected readonly model = signal<LibroFormModel>({ ...MODELO_VACIO });
+  protected readonly model = signal<CamposLibroModel>({ ...MODELO_VACIO });
 
   protected readonly libroForm = form(this.model, (s) => {
     required(s.titulo, { message: 'El título es obligatorio' });
     required(s.estado, { message: 'El estado es obligatorio' });
-    required(s.autorId, { message: 'Debes seleccionar un autor' });
   });
+
+  // Autor queda fuera de CamposLibroModel (ver campos-libro.ts) — vive en
+  // su propio signal + form chico, mismo criterio que paisId en
+  // autor-form. Al ser un modelo primitivo, el form resultante ES el
+  // Field de todo el valor: se bindea directo con [formField]="autorForm",
+  // sin subcampos.
+  protected readonly autorId = signal('');
+
+  protected readonly autorForm = form(this.autorId, (s) => {
+    required(s, { message: 'Debes seleccionar un autor' });
+  });
+
+  // Géneros también quedan fuera de CamposLibroModel — no necesitan
+  // validación de Signal Forms (no hay required posible sobre "al menos
+  // un género"), así que un signal simple alcanza.
+  generoIds = signal<number[]>([]);
+  generoParaAgregar = signal('');
 
   librosOrdenados = computed(() =>
     [...this.libros()].sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'))
@@ -82,12 +90,12 @@ export class LibroForm implements OnInit {
   );
 
   generosSeleccionados = computed(() => {
-    const ids = this.model().generoIds;
+    const ids = this.generoIds();
     return this.generosDisponiblesTodos().filter((g) => ids.includes(g.id!));
   });
 
   generosDisponibles = computed(() => {
-    const ids = this.model().generoIds;
+    const ids = this.generoIds();
     return this.generosDisponiblesTodos().filter((g) => !ids.includes(g.id!));
   });
 
@@ -151,6 +159,8 @@ export class LibroForm implements OnInit {
 
     if (id === 0) {
       this.model.set({ ...MODELO_VACIO });
+      this.autorId.set('');
+      this.generoIds.set([]);
       return;
     }
 
@@ -162,14 +172,13 @@ export class LibroForm implements OnInit {
           isbn: libro.isbn ?? '',
           portadaUrl: libro.portadaUrl ?? '',
           estado: libro.estado,
-          autorId: String(libro.autor.id),
-          generoIds: libro.generos.map((g) => g.id!),
-          generoParaAgregar: '',
           anioPublicacion: libro.anioPublicacion != null ? String(libro.anioPublicacion) : '',
           anioLectura: libro.anioLectura != null ? String(libro.anioLectura) : '',
           fechaInicio: libro.fechaInicio ?? '',
           fechaTermino: libro.fechaTermino ?? '',
         });
+        this.autorId.set(String(libro.autor.id));
+        this.generoIds.set(libro.generos.map((g) => g.id!));
         this.cargandoLibro.set(false);
       },
       error: () => {
@@ -179,9 +188,17 @@ export class LibroForm implements OnInit {
     });
   }
 
-  // agregarGenero() y quitarGenero() se movieron a CamposLibro: no llaman
-  // a ningún backend, son mutación directa del arreglo generoIds sobre el
-  // mismo signal `model` que este componente sigue siendo dueño de leer.
+  agregarGenero(): void {
+    const idStr = this.generoParaAgregar();
+    if (!idStr) return;
+    const id = Number(idStr);
+    this.generoIds.update((ids) => [...ids, id]);
+    this.generoParaAgregar.set('');
+  }
+
+  quitarGenero(id: number): void {
+    this.generoIds.update((ids) => ids.filter((gid) => gid !== id));
+  }
 
   crearGeneroNuevo(): void {
     const nombre = this.nombreGeneroNuevo().trim();
@@ -196,10 +213,7 @@ export class LibroForm implements OnInit {
     this.generoService.crear({ nombre }).subscribe({
       next: (creado) => {
         this.generosDisponiblesTodos.update((lista) => [...lista, creado]);
-        this.model.update((m) => ({
-          ...m,
-          generoIds: [...m.generoIds, creado.id!],
-        }));
+        this.generoIds.update((ids) => [...ids, creado.id!]);
         this.nombreGeneroNuevo.set('');
         this.creandoGenero.set(false);
       },
@@ -213,6 +227,13 @@ export class LibroForm implements OnInit {
 
   onSubmit(): void {
     submit(this.libroForm, async () => {
+      // autorForm se valida acá manualmente — submit() de Signal Forms no
+      // soporta validar dos forms en un solo llamado, mismo patrón que
+      // paisForm en autor-form.
+      if (this.autorForm().invalid()) {
+        return;
+      }
+
       this.errorEnvio.set(null);
       this.mensajeExito.set(null);
       this.enviando.set(true);
@@ -223,8 +244,8 @@ export class LibroForm implements OnInit {
         isbn: m.isbn.trim() ? m.isbn.trim() : undefined,
         portadaUrl: m.portadaUrl.trim() ? m.portadaUrl.trim() : undefined,
         estado: m.estado,
-        autorId: Number(m.autorId),
-        generoIds: m.generoIds,
+        autorId: Number(this.autorId()),
+        generoIds: this.generoIds(),
         anioPublicacion: m.anioPublicacion.trim() ? Number(m.anioPublicacion.trim()) : undefined,
         anioLectura: m.anioLectura.trim() ? Number(m.anioLectura.trim()) : undefined,
         fechaInicio: m.fechaInicio.trim() ? m.fechaInicio.trim() : undefined,
@@ -273,6 +294,8 @@ export class LibroForm implements OnInit {
         this.libros.update((lista) => lista.filter((l) => l.id !== id));
         this.libroSeleccionadoId.set(0);
         this.model.set({ ...MODELO_VACIO });
+        this.autorId.set('');
+        this.generoIds.set([]);
         this.eliminando.set(false);
       },
       error: () => {
