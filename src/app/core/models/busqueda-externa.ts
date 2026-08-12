@@ -167,6 +167,12 @@ export interface ImportarLibroRequest {
   portada_url?: string;
   isbn?: string | null;
   estado: string;
+  // Lectura personal — opcionales, se llenan solo si el usuario ya leyó
+  // el libro que está importando. Mismo criterio que anio_publicacion:
+  // se omiten del payload si quedan vacíos (undefined, no null vacío).
+  anio_lectura?: number;
+  fecha_inicio?: string; // ISO date (yyyy-MM-dd)
+  fecha_termino?: string; // ISO date (yyyy-MM-dd)
   autor: AutorImportSchema;
   generos: GeneroImportSchema[];
 }

@@ -2,14 +2,15 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { form, FormField, submit, required } from '@angular/forms/signals';
+import { form, submit, required } from '@angular/forms/signals';
 
 import { BusquedaLibrosService, AutorResueltoFinal } from '../busqueda-libros.service';
 import { GeneroService } from '../genero.service';
 import { PaisService } from '../../autores/pais.service';
-import { PortadaLibro } from '../../../shared/components/portada-libro/portada-libro';
+import { CamposLibro, CamposLibroModel } from '../../../shared/components/campos-libro/campos-libro';
+import { CamposAutor, CamposAutorModel } from '../../../shared/components/campos-autor/campos-autor';
 
-import { EstadoLectura, LibroResponseDTO } from '../../../core/models/libro';
+import { LibroResponseDTO } from '../../../core/models/libro';
 import { GeneroDTO } from '../../../core/models/genero';
 import { PaisDTO } from '../../../core/models/pais';
 import { ErrorResponseDTO } from '../../../core/models/error-response';
@@ -21,29 +22,13 @@ import {
   AutorCreateSchema,
 } from '../../../core/models/busqueda-externa';
 
-interface LibroConfirmModel {
-  titulo: string;
-  isbn: string;
-  portadaUrl: string;
-  anioPublicacion: string;
-  estado: EstadoLectura;
-}
+// El shape del libro acá es exactamente el de CamposLibroModel — a
+// diferencia de libro-form, no hay campos propios de esta página que
+// agregar, así que no hace falta una interfaz separada, solo un alias
+// para no tener que renombrar el resto del archivo.
+type LibroConfirmModel = CamposLibroModel;
 
-// Campos "planos" del autor nuevo (todo lo que no sea país, que se maneja
-// aparte porque es una unión discriminada, no un string simple — mismo
-// criterio que en autor-form, donde paisId vive fuera de los campos de
-// texto/fecha).
-interface AutorNuevoModel {
-  nombre: string;
-  idioma: string;
-  retratoUrl: string;
-  fechaNacimiento: string;
-  anioNacimientoAprox: string;
-  fechaDefuncion: string;
-  anioDefuncionAprox: string;
-}
-
-const AUTOR_NUEVO_VACIO: AutorNuevoModel = {
+const AUTOR_NUEVO_VACIO: CamposAutorModel = {
   nombre: '',
   idioma: '',
   retratoUrl: '',
@@ -55,7 +40,7 @@ const AUTOR_NUEVO_VACIO: AutorNuevoModel = {
 
 @Component({
   selector: 'app-confirmar-importar',
-  imports: [FormField, PortadaLibro],
+  imports: [CamposLibro, CamposAutor],
   templateUrl: './confirmar-importar.html',
   styleUrl: './confirmar-importar.scss',
 })
@@ -71,7 +56,8 @@ export class ConfirmarImportar implements OnInit {
   autor = signal<AutorResueltoFinal | null>(null);
 
   // Descripción original de Google Books, solo para contexto visual — no
-  // es un campo editable del Libro (LibroDTO tampoco lo tiene hoy).
+  // es un campo editable del Libro (LibroDTO tampoco lo tiene hoy), y por
+  // eso queda fuera de CamposLibro, renderizada aparte en esta página.
   descripcion = signal<string | undefined>(undefined);
 
   generosDisponiblesTodos = signal<GeneroDTO[]>([]);
@@ -85,10 +71,13 @@ export class ConfirmarImportar implements OnInit {
   paisIdParaSeleccionar = signal<string>('');
   nombrePaisNuevo = signal('');
 
+  // Valor inicial para CamposAutor (según venga con año aproximado o
+  // fecha exacta desde Wikidata/Gemini) — de acá en adelante los cambios
+  // de modo los gestiona el propio CamposAutor vía two-way binding.
   modoNacimiento = signal<'exacta' | 'aproximado'>('exacta');
   modoDefuncion = signal<'exacta' | 'aproximado'>('exacta');
 
-  protected readonly autorNuevoModel = signal<AutorNuevoModel>({ ...AUTOR_NUEVO_VACIO });
+  protected readonly autorNuevoModel = signal<CamposAutorModel>({ ...AUTOR_NUEVO_VACIO });
 
   protected readonly autorNuevoForm = form(this.autorNuevoModel, (s) => {
     required(s.nombre, { message: 'El nombre del autor es obligatorio' });
@@ -107,6 +96,12 @@ export class ConfirmarImportar implements OnInit {
     portadaUrl: '',
     anioPublicacion: '',
     estado: 'POR_LEER',
+    // Campos de lectura personal — forman parte del shape compartido con
+    // libro-form (CamposLibroModel). Vacíos por defecto: el usuario los
+    // llena solo si está importando un libro que ya leyó.
+    anioLectura: '',
+    fechaInicio: '',
+    fechaTermino: '',
   });
 
   protected readonly libroForm = form(this.model, (s) => {
@@ -163,6 +158,9 @@ export class ConfirmarImportar implements OnInit {
       portadaUrl: resolucion.portada_url ?? '',
       anioPublicacion: resolucion.anio_publicacion != null ? String(resolucion.anio_publicacion) : '',
       estado: 'POR_LEER',
+      anioLectura: '',
+      fechaInicio: '',
+      fechaTermino: '',
     });
 
     const cargas: Promise<void>[] = [
@@ -253,7 +251,8 @@ export class ConfirmarImportar implements OnInit {
   }
 
   // ==========================================
-  // Autor nuevo: país y fechas (edición 100% local)
+  // Autor nuevo: país (edición 100% local — fechas y sus toggles ahora
+  // los gestiona CamposAutor internamente)
   // ==========================================
 
   seleccionarPaisExistente(): void {
@@ -272,24 +271,6 @@ export class ConfirmarImportar implements OnInit {
 
     this.paisSeleccionado.set({ tipo: 'nuevo', datos: { nombre } });
     this.nombrePaisNuevo.set('');
-  }
-
-  cambiarModoNacimiento(modo: 'exacta' | 'aproximado'): void {
-    this.modoNacimiento.set(modo);
-    this.autorNuevoModel.update((m) => ({
-      ...m,
-      fechaNacimiento: modo === 'exacta' ? m.fechaNacimiento : '',
-      anioNacimientoAprox: modo === 'aproximado' ? m.anioNacimientoAprox : '',
-    }));
-  }
-
-  cambiarModoDefuncion(modo: 'exacta' | 'aproximado'): void {
-    this.modoDefuncion.set(modo);
-    this.autorNuevoModel.update((m) => ({
-      ...m,
-      fechaDefuncion: modo === 'exacta' ? m.fechaDefuncion : '',
-      anioDefuncionAprox: modo === 'aproximado' ? m.anioDefuncionAprox : '',
-    }));
   }
 
   // ==========================================
@@ -314,6 +295,12 @@ export class ConfirmarImportar implements OnInit {
       const request: ImportarLibroRequest = {
         titulo: m.titulo,
         anio_publicacion: m.anioPublicacion.trim() ? Number(m.anioPublicacion.trim()) : undefined,
+        // Lectura personal — mismo criterio que anio_publicacion: string
+        // vacío en el form se traduce a undefined (campo omitido), no a
+        // un valor "cero" o fecha inválida.
+        anio_lectura: m.anioLectura.trim() ? Number(m.anioLectura.trim()) : undefined,
+        fecha_inicio: m.fechaInicio.trim() ? m.fechaInicio.trim() : undefined,
+        fecha_termino: m.fechaTermino.trim() ? m.fechaTermino.trim() : undefined,
         descripcion: this.descripcion(),
         portada_url: m.portadaUrl.trim() ? m.portadaUrl.trim() : undefined,
         isbn: m.isbn.trim() ? m.isbn.trim() : undefined,
@@ -374,4 +361,4 @@ export class ConfirmarImportar implements OnInit {
   buscarOtro(): void {
     this.router.navigate(['/libros/buscar']);
   }
-}  
+}
