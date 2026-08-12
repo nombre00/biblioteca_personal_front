@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { AutorService } from '../autor.service';
 import { LibroService } from '../../libros/libro.service';
 import { BiografiaService } from '../biografia.service';
@@ -7,10 +7,11 @@ import { AutorResponseDTO } from '../../../core/models/autor';
 import { LibroResponseDTO } from '../../../core/models/libro';
 import { GeneroDTO } from '../../../core/models/genero';
 import { BiografiaResponse } from '../../../core/models/biografia';
+import { CarruselLibros, CarruselItem } from '../../../shared/components/carrusel-libros/carrusel-libros';
 
 @Component({
   selector: 'app-autor-detail',
-  imports: [RouterLink],
+  imports: [CarruselLibros],
   templateUrl: './autor-detail.html',
   styleUrl: './autor-detail.scss',
 })
@@ -27,6 +28,18 @@ export class AutorDetail implements OnInit {
 
   biografia = signal<BiografiaResponse | null>(null);
   biografiaCargando = signal(true);
+
+  // Mapeo a la forma normalizada que consume CarruselLibros. Sin
+  // subtitulo: en esta página ya estamos viendo al autor, repetir su
+  // nombre bajo cada portada sería redundante (a diferencia de
+  // "sugerencias" en home, donde sí aporta).
+  librosAutorCarrusel = computed<CarruselItem[]>(() =>
+    this.librosAutor().map((l) => ({
+      id: l.id,
+      portadaUrl: l.portadaUrl,
+      titulo: l.titulo,
+    }))
+  );
 
   // Unión deduplicada de géneros de todos los libros del autor, ordenada por frecuencia descendente.
   generosAutor = computed<GeneroDTO[]>(() => {

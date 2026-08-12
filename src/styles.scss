@@ -11,7 +11,7 @@
   --text-grande: 2.2rem;
 
   --spacing-separador-chico: 3rem;
-  --spacing-separador-mediano: 7rem;
+  --spacing-separador-mediano: 5rem;
 
   --background-image-fondo1: url('/fondos/fondo-1.jpg');
   --background-image-fondo2: url('/fondos/fondo-2.jpg');
@@ -34,4 +34,4 @@ body {
 .overlay-fondo {
   background-color: var(--color-overlay-fondo);
   opacity: var(--opacity-overlay-fondo);
-}  
+}

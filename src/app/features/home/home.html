@@ -42,17 +42,17 @@
             <a  [routerLink]="['/libros', libro.id]"
               class="group flex items-stretch gap-6 bg-white rounded-md shadow-sm hover:shadow-md transition-shadow p-6"
             >
-              <div class="w-1/3 shrink-0">
+              <div class="w-1/4 shrink-0">
                 <h2 class="text-grande font-semibold text-gray-800 mb-4">Leyendo ahora</h2>
                 <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="grande" />
               </div>
-              <div class="w-2/3 min-w-0 flex flex-col">
+              <div class="w-3/4 min-w-0 flex flex-col">
                 <h3 class="text-mediana font-medium font-semibold text-gray-800 group-hover:text-orange-500">{{ libro.titulo }}</h3>
                 <p class="text-mediana font-semibold text-gray-500 mt-0.5">{{ libro.autor.nombre }}</p>
-                
+
                 <!-- Contenedor del resumen con fondo3 y el overlay -->
                 <div class="relative mt-3 border border-dashed border-gray-300 rounded-md p-4 bg-fondo3 bg-cover bg-center flex-1 min-h-0 overflow-y-auto">
-                  
+
                   <!-- Capa de overlay semitransparente por encima del fondo3 -->
                   <div class="absolute inset-0 overlay-fondo pointer-events-none"></div>
 
@@ -76,61 +76,35 @@
     }
 
     <!-- Sugerencias -->
-    @if (sugerencias().length > 0) {
+    @if (sugerenciasCarrusel().length > 0) {
       <section class="mb-10 mt-separador-mediano">
-        <div class="w-full bg-gray-50/80 rounded-lg p-4">
-          <h2 class="text-grande font-semibold text-gray-800 mb-4">Sugerencias de escritores más leidos</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
-            @for (item of sugerencias(); track item.libroId) {
-              <a [routerLink]="['/libros', item.libroId]" class="group flex flex-col">
-                <app-portada-libro [portadaUrl]="item.urlPortada" [titulo]="item.titulo" tamano="chico" />
-                <h3 class="mt-2 text-pequena font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
-                  {{ item.titulo }}
-                </h3>
-                <p class="text-pequena text-gray-500 mt-0.5">{{ item.autorNombre }}</p>
-              </a>
-            }
-          </div>
-
-        </div>
+        <app-carrusel-libros
+          [items]="sugerenciasCarrusel()"
+          [itemsPorPagina]="7"
+          titulo="Sugerencias de escritores más leídos"
+        />
       </section>
     }
 
     <!-- Últimos leídos -->
-    @if (ultimosLeidos().length > 0) {
+    @if (ultimosLeidosCarrusel().length > 0) {
       <section class="mb-10 mt-separador-mediano">
-        <div class="w-full bg-gray-50/80 rounded-lg p-4">
-          <h2 class="text-grande font-semibold text-gray-800 mb-4">Últimos leídos</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
-            @for (libro of ultimosLeidos(); track libro.id) {
-              <a [routerLink]="['/libros', libro.id]" class="group flex flex-col">
-                <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="chico" />
-                <h3 class="mt-2 text-pequena font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
-                  {{ libro.titulo }}
-                </h3>
-              </a>
-            }
-          </div>
-        </div>
+        <app-carrusel-libros
+          [items]="ultimosLeidosCarrusel()"
+          [itemsPorPagina]="7"
+          titulo="Últimos leídos"
+        />
       </section>
     }
 
     <!-- Últimos ingresados -->
-    @if (ultimosIngresados().length > 0) {
+    @if (ultimosIngresadosCarrusel().length > 0) {
       <section class="mb-10 mt-separador-mediano">
-        <div class="w-full bg-gray-50/80 rounded-lg p-4">
-          <h2 class="text-grande font-semibold text-gray-800 mb-4">Últimos ingresados</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
-            @for (libro of ultimosIngresados(); track libro.id) {
-              <a [routerLink]="['/libros', libro.id]" class="group flex flex-col">
-                <app-portada-libro [portadaUrl]="libro.portadaUrl" [titulo]="libro.titulo" tamano="chico" />
-                <h3 class="mt-2 text-pequena font-medium text-gray-800 group-hover:text-orange-500 line-clamp-2">
-                  {{ libro.titulo }}
-                </h3>
-              </a>
-            }
-          </div>
-        </div>
+        <app-carrusel-libros
+          [items]="ultimosIngresadosCarrusel()"
+          [itemsPorPagina]="7"
+          titulo="Últimos ingresados"
+        />
       </section>
     }
   }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { LibroService } from '../libro.service';
@@ -6,10 +6,11 @@ import { ResumenService } from '../resumen.service';
 import { LibroResponseDTO } from '../../../core/models/libro';
 import { GeneroDTO } from '../../../core/models/genero';
 import { ResumenResponse } from '../../../core/models/resumen';
+import { CarruselLibros, CarruselItem } from '../../../shared/components/carrusel-libros/carrusel-libros';
 
 @Component({
   selector: 'app-libro-detail',
-  imports: [RouterLink, NgClass],
+  imports: [RouterLink, NgClass, CarruselLibros],
   templateUrl: './libro-detail.html',
   styleUrl: './libro-detail.scss',
 })
@@ -24,6 +25,17 @@ export class LibroDetail implements OnInit {
   resumenCargando = signal(true);
   cargando = signal(true);
   error = signal<string | null>(null);
+
+  // Mapeo a la forma normalizada que consume CarruselLibros — mismo
+  // criterio que autor-detail: sin subtitulo, ya estamos en la página de
+  // un libro de ese autor, repetir el nombre no aporta.
+  otrosLibrosAutorCarrusel = computed<CarruselItem[]>(() =>
+    this.otrosLibrosAutor().map((l) => ({
+      id: l.id,
+      portadaUrl: l.portadaUrl,
+      titulo: l.titulo,
+    }))
+  );
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {

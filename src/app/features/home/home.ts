@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LibroService } from '../libros/libro.service';
 import { ResumenService } from '../libros/resumen.service';
@@ -7,10 +7,11 @@ import { LibroResponseDTO } from '../../core/models/libro';
 import { SugerenciaLibroDTO } from '../../core/models/recomendacion';
 import { ResumenResponse } from '../../core/models/resumen';
 import { PortadaLibro } from '../../shared/components/portada-libro/portada-libro';
+import { CarruselLibros, CarruselItem } from '../../shared/components/carrusel-libros/carrusel-libros';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, PortadaLibro],
+  imports: [RouterLink, PortadaLibro, CarruselLibros],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -31,21 +32,53 @@ export class Home implements OnInit {
   resumenesLeyendo = signal<Map<number, ResumenResponse>>(new Map());
   resumenesCargando = signal<Set<number>>(new Set());
 
+  // Mapeos a la forma normalizada que consume CarruselLibros — puramente
+  // de presentación, no cambia nada del lado del backend. "Últimos
+  // leídos"/"Últimos ingresados" no muestran autor hoy, así que se deja
+  // subtitulo sin definir para no alterar el diseño actual.
+  sugerenciasCarrusel = computed<CarruselItem[]>(() =>
+    this.sugerencias().map((s) => ({
+      id: s.libroId,
+      portadaUrl: s.urlPortada,
+      titulo: s.titulo,
+      subtitulo: s.autorNombre,
+    }))
+  );
+
+  ultimosLeidosCarrusel = computed<CarruselItem[]>(() =>
+    this.ultimosLeidos().map((l) => ({
+      id: l.id,
+      portadaUrl: l.portadaUrl,
+      titulo: l.titulo,
+    }))
+  );
+
+  ultimosIngresadosCarrusel = computed<CarruselItem[]>(() =>
+    this.ultimosIngresados().map((l) => ({
+      id: l.id,
+      portadaUrl: l.portadaUrl,
+      titulo: l.titulo,
+    }))
+  );
+
   ngOnInit(): void {
     this.libroService.listarTodos().subscribe({
       next: (libros) => {
         const leyendoActual = libros.filter((l) => l.estado === 'LEYENDO');
         this.leyendo.set(leyendoActual);
 
+        // Antes se recortaba acá mismo con .slice(0, 5) porque no había
+        // forma de ver más. Ahora el recorte de "cuántos se ven a la vez"
+        // lo maneja el carrusel (itemsPorPagina) — acá se guarda la lista
+        // completa para que las flechas "siguiente" tengan qué mostrar.
         this.ultimosLeidos.set(
           libros
             .filter((l) => l.estado === 'LEIDO')
             .sort((a, b) => this.compararLeidos(a, b))
-            .slice(0, 5)
         );
 
         this.ultimosIngresados.set(
-          [...libros].sort((a, b) => b.id - a.id).slice(0, 5)
+          [...libros].sort((a, b) => b.id - a.id)
         );
 
         this.cargando.set(false);
