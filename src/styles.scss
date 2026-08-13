@@ -10,8 +10,8 @@
   --text-mediana: 1.3rem;
   --text-grande: 2.2rem;
 
-  --spacing-separador-chico: 3rem;
-  --spacing-separador-mediano: 5rem;
+  --spacing-separador-chico: 1rem;
+  --spacing-separador-mediano: 3rem;
 
   --background-image-fondo1: url('/fondos/fondo-1.jpg');
   --background-image-fondo2: url('/fondos/fondo-2.jpg');
@@ -20,7 +20,7 @@
   --background-image-fondo5: url('/fondos/fondo-5.jpg');
   --background-image-fondo6: url('/fondos/fondo-7.avif');
   --background-image-fondo8: url('/fondos/fondo-8.jpg');
-}
+} 
 
 body {
   font-family: var(--font-base);

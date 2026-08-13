@@ -8,16 +8,20 @@ import {
   ApexPlotOptions,
   ApexDataLabels,
   ApexGrid,
+  ApexAnnotations,
 } from 'ng-apexcharts';
 import { ConteoDobleDTO } from '../../../core/models/estadistica';
 
-// Barra de fondo (total) en tono claro, barra superpuesta (leídos) en tono oscuro.
-// Cuando destacarTop() > 0, las primeras N barras de "leídos" (los datos ya vienen
-// ordenados desc desde el backend) se pintan en ámbar en vez de naranja, para
-// remarcar visualmente el top (ej. los 7 autores más leídos).
-const COLOR_FONDO = '#fed7aa'; // orange-200
-const COLOR_LEIDOS = '#fb923c'; // orange-400
-const COLOR_LEIDOS_DESTACADO = '#f59e0b'; // amber-500
+// Barra apilada: "Leídos" (oscuro) + "Restante" (claro, = total - leídos)
+// en un solo chart, así ambas series comparten exactamente el mismo layout
+// interno (sin riesgo de desalineación entre capas).
+// Cuando destacarTop() > 0, las primeras N filas (los datos ya vienen
+// ordenados desc desde el backend) se resaltan con una banda de fondo
+// sutil detrás de toda la fila, en vez de colorear la barra (distributed
+// no es compatible con stacked en ApexCharts).
+const COLOR_LEIDOS = '#4791db'; // orange-400
+const COLOR_RESTANTE = '#cfcd44'; // orange-200
+const COLOR_BANDA_DESTACADO = 'rgba(245, 158, 11, 0.12)'; // amber-500 muy suave
 
 @Component({
   selector: 'app-grafico-barras',
@@ -30,104 +34,83 @@ export class GraficoBarras {
   // Se asume ya ordenados desc por relevancia (así los entrega el backend).
   datos = input.required<ConteoDobleDTO[]>();
 
-  // Cuántas de las primeras barras destacar con un color distinto (0 = ninguna).
+  // Cuántas de las primeras filas destacar con una banda de fondo (0 = ninguna).
   // Usado en "por autor" para remarcar el top 7; "por país" no destaca ninguna.
   destacarTop = input<number>(0);
 
-  // Si algún ítem trae cantidadTotal, se dibujan DOS capas superpuestas
-  // (fondo = total, encima = leídos, más angosta). Si todos vienen con
-  // cantidadTotal null (año filtrado), solo se dibuja la capa de leídos,
-  // esta vez sola y con sus propias etiquetas de categoría visibles.
-  hayTotal = computed(() => this.datos().some((d) => d.cantidadTotal !== null));
-
   categorias = computed(() => this.datos().map((d) => d.etiqueta));
 
-  // Máximo común para que las dos capas compartan la misma escala del eje de
-  // valores — si no, cada chart de ApexCharts autoescala por su cuenta y las
-  // barras dejan de calzar entre sí.
+  // Máximo del eje: usa cantidadTotal cuando existe, o cantidadLeidos si no
+  // (año filtrado, sin segunda serie).
   maximoValor = computed(() =>
     Math.max(...this.datos().map((d) => d.cantidadTotal ?? d.cantidadLeidos), 1)
   );
 
-  // Alto proporcional a la cantidad de ítems, para que cada barra tenga un
+  // Alto proporcional a la cantidad de ítems, para que cada fila tenga un
   // grosor razonable sin importar si la lista trae 5 o 20 elementos.
   alto = computed(() => Math.max(200, this.datos().length * 40));
 
-  // --- Capa de fondo (total) ---
-  seriesFondo = computed<ApexAxisChartSeries>(() => [
-    { name: 'Total', data: this.datos().map((d) => d.cantidadTotal ?? 0) },
+  series = computed<ApexAxisChartSeries>(() => [
+    {
+      name: 'Leídos',
+      data: this.datos().map((d) => d.cantidadLeidos),
+    },
+    {
+      name: 'Por leer',
+      data: this.datos().map((d) =>
+        d.cantidadTotal !== null ? d.cantidadTotal - d.cantidadLeidos : 0
+      ),
+    },
   ]);
 
-  chartFondo = computed<ApexChart>(() => ({
+  chart = computed<ApexChart>(() => ({
     type: 'bar',
     height: this.alto(),
+    stacked: true,
     toolbar: { show: false },
     animations: { enabled: false },
   }));
 
-  plotOptionsFondo: ApexPlotOptions = {
+  plotOptions: ApexPlotOptions = {
     bar: { horizontal: true, barHeight: '70%' },
   };
 
-  coloresFondo = [COLOR_FONDO];
+  colores = [COLOR_LEIDOS, COLOR_RESTANTE];
 
-  xaxisFondo = computed<ApexXAxis>(() => ({
+  xaxis = computed<ApexXAxis>(() => ({
     categories: this.categorias(),
     max: this.maximoValor(),
-    labels: { show: false },
   }));
 
-  dataLabelsFondo: ApexDataLabels = {
-    enabled: true,
-    style: { fontSize: '11px', colors: ['#78716c'] },
+  yaxis: ApexYAxis = {
+    labels: { show: true },
   };
 
-  // --- Capa de leídos (superpuesta si hayTotal(), o única si no) ---
-  seriesLeidos = computed<ApexAxisChartSeries>(() => [
-    { name: 'Leídos', data: this.datos().map((d) => d.cantidadLeidos) },
-  ]);
+  grid: ApexGrid = { show: false };
 
-  chartLeidos = computed<ApexChart>(() => ({
-    type: 'bar',
-    height: this.alto(),
-    toolbar: { show: false },
-    animations: { enabled: false },
-    background: 'transparent',
-  }));
-
-  // barHeight angosto solo cuando hay una capa de fondo detrás (efecto "adentro").
-  // distributed:true habilita colorear cada barra individualmente vía `colores`,
-  // necesario para el remarcado de destacarTop().
-  plotOptionsLeidos = computed<ApexPlotOptions>(() => ({
-    bar: {
-      horizontal: true,
-      barHeight: this.hayTotal() ? '40%' : '70%',
-      distributed: this.destacarTop() > 0,
-    },
-  }));
-
-  colores = computed<string[]>(() => {
-    const top = this.destacarTop();
-    if (top <= 0) return [COLOR_LEIDOS];
-    return this.datos().map((_, i) => (i < top ? COLOR_LEIDOS_DESTACADO : COLOR_LEIDOS));
-  });
-
-  xaxisLeidos = computed<ApexXAxis>(() => ({
-    categories: this.categorias(),
-    max: this.maximoValor(),
-    labels: { show: false },
-  }));
-
-  // Etiquetas de categoría (nombres) visibles solo si esta es la única capa
-  // (no hay fondo detrás mostrándolas ya).
-  yaxisLeidos = computed<ApexYAxis>(() => ({
-    labels: { show: !this.hayTotal() },
-  }));
-
-  gridOculto: ApexGrid = { show: false };
-
-  dataLabelsLeidos: ApexDataLabels = {
+  // Solo la serie "Leídos" lleva número visible dentro de la barra;
+  // "Restante" no muestra dataLabel (evita ruido con el total ya visible
+  // como largo total de la barra apilada).
+  dataLabels = computed<ApexDataLabels>(() => ({
     enabled: true,
+    enabledOnSeries: [0],
     style: { fontSize: '11px', colors: ['#ffffff'] },
-  };
+  }));
+
+  // Banda de fondo detrás de cada fila del top N. Se define como anotación
+  // de xaxis (eje de categorías en horizontal bar) con x = x2 = la misma
+  // categoría, lo que ApexCharts expande al ancho completo de esa fila.
+  annotations = computed<ApexAnnotations>(() => {
+    const top = this.destacarTop();
+    if (top <= 0) return {};
+    const cats = this.categorias().slice(0, top);
+    return {
+      xaxis: cats.map((cat) => ({
+        x: cat,
+        x2: cat,
+        fillColor: COLOR_BANDA_DESTACADO,
+        opacity: 1,
+      })),
+    };
+  });
 }

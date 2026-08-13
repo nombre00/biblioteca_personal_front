@@ -1,26 +1,13 @@
 <div class="relative" [style.height.px]="alto()">
-  @if (hayTotal()) {
-    <div class="absolute inset-0">
-      <apx-chart
-        [series]="seriesFondo()"
-        [chart]="chartFondo()"
-        [xaxis]="xaxisFondo()"
-        [plotOptions]="plotOptionsFondo"
-        [colors]="coloresFondo"
-        [dataLabels]="dataLabelsFondo"
-      />
-    </div>
-  }
-  <div class="absolute inset-0">
-    <apx-chart
-      [series]="seriesLeidos()"
-      [chart]="chartLeidos()"
-      [xaxis]="xaxisLeidos()"
-      [yaxis]="yaxisLeidos()"
-      [grid]="gridOculto"
-      [plotOptions]="plotOptionsLeidos()"
-      [colors]="colores()"
-      [dataLabels]="dataLabelsLeidos"
-    />
-  </div>
+  <apx-chart
+    [series]="series()"
+    [chart]="chart()"
+    [xaxis]="xaxis()"
+    [yaxis]="yaxis"
+    [grid]="grid"
+    [plotOptions]="plotOptions"
+    [colors]="colores"
+    [dataLabels]="dataLabels()"
+    [annotations]="annotations()"
+  />
 </div>
