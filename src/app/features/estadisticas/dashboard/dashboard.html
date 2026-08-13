@@ -1,6 +1,3 @@
-<!-- ============================================================
-     Dashboard de estadísticas de la biblioteca personal
-     ============================================================ -->
 <div class="w-full px-6 py-8 bg-fondo6 bg-repeat min-h-screen">
 
   @if (cargando()) {
@@ -9,16 +6,12 @@
     <p class="text-red-600">{{ error() }}</p>
   } @else {
 
-
     <section class="bg-gray-50/85 rounded-md shadow-sm p-6 mb-6">
       <h1 class="text-grande font-serif font-semibold text-gray-800 mb-1">Estadísticas</h1>
       <p class="text-pequena text-gray-500 mb-8">Un vistazo a tu biblioteca.</p>
 
-      <!-- ========================================================
-          Ritmo de lectura: 3 números destacados arriba de todo
-          ======================================================== -->
       @if (ritmoLectura(); as ritmo) {
-        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-white rounded-md shadow-sm p-5 text-center">
             <p class="text-3xl font-semibold text-gray-800">{{ ritmo.totalLibrosConAnio }}</p>
             <p class="text-pequena text-gray-500 mt-1">Libros con año de lectura registrado</p>
@@ -36,217 +29,84 @@
         </section>
       }
     </section>
-    
 
-    <!-- ========================================================
-         Por año de lectura: grilla simple, sin selector.
-         Además alimenta el <select> de año de las demás secciones.
-         ======================================================== -->
-    <!-- ========================================================
-         Por estado: barra simple (ConteoDTO), sin selector de año.
-         ======================================================== -->
-    @if (porAnioLectura().length > 0) {
-    <section class="bg-gray-50/85 rounded-md shadow-sm p-6 mb-6 mt-separador-chico">
-      <h2 class="text-mediana font-semibold uppercase text-gray-600 mb-4">Libros leídos por año</h2>
-      <div class="flex flex-col md:flex-row gap-4 mb-4">
-        <div class="md:w-1/3 min-w-0">
-          <app-grafico-pie [datos]="porEstado()" />
-        </div>
-        <div class="md:w-2/3 min-w-0">
-          <app-grafico-lineas [datos]="porAnioLectura()" />
-        </div>
-      </div>
-      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-        @for (item of porAnioLectura(); track item.etiqueta) {
-          <div class="text-center bg-gray-50 rounded-md p-3">
-            <p class="text-lg font-semibold text-gray-800">{{ item.cantidad }}</p>
-            <p class="text-xs text-gray-500">{{ item.etiqueta }}</p>
-          </div>
-        }
-      </div>
-    </section>
-  }
+    <!-- ======================= Tabs ======================= -->
+    <div class="flex gap-2 mb-6 border-b bg-white border-gray-200">
+      <button
+        type="button"
+        (click)="cambiarTab('anio')"
+        class="px-4 py-2 text-pequena font-medium border-b-2 -mb-px transition-colors"
+        [class.border-orange-400]="tabActiva() === 'anio'"
+        [class.text-gray-800]="tabActiva() === 'anio'"
+        [class.border-transparent]="tabActiva() !== 'anio'"
+        [class.text-gray-400]="tabActiva() !== 'anio'"
+      >
+        Por año
+      </button>
+      <button
+        type="button"
+        (click)="cambiarTab('genero')"
+        class="px-4 py-2 text-pequena font-medium border-b-2 -mb-px transition-colors"
+        [class.border-orange-400]="tabActiva() === 'genero'"
+        [class.text-gray-800]="tabActiva() === 'genero'"
+        [class.border-transparent]="tabActiva() !== 'genero'"
+        [class.text-gray-400]="tabActiva() !== 'genero'"
+      >
+        Por género
+      </button>
+      <button
+        type="button"
+        (click)="cambiarTab('autor')"
+        class="px-4 py-2 text-pequena font-medium border-b-2 -mb-px transition-colors"
+        [class.border-orange-400]="tabActiva() === 'autor'"
+        [class.text-gray-800]="tabActiva() === 'autor'"
+        [class.border-transparent]="tabActiva() !== 'autor'"
+        [class.text-gray-400]="tabActiva() !== 'autor'"
+      >
+        Por autor
+      </button>
+      <button
+        type="button"
+        (click)="cambiarTab('pais')"
+        class="px-4 py-2 text-pequena font-medium border-b-2 -mb-px transition-colors"
+        [class.border-orange-400]="tabActiva() === 'pais'"
+        [class.text-gray-800]="tabActiva() === 'pais'"
+        [class.border-transparent]="tabActiva() !== 'pais'"
+        [class.text-gray-400]="tabActiva() !== 'pais'"
+      >
+        Por país
+      </button>
+    </div>
 
-    <!-- ========================================================
-     Por género: barra simple (ConteoDTO), con selector de año.
-     Si no hay libros leídos en el año elegido, se muestra un
-     mensaje en vez de ocultar la sección.
-     ======================================================== -->
-    <section class="bg-gray-50/85 rounded-md shadow-sm p-6 mb-6 mt-separador-chico">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-mediana font-semibold uppercase text-gray-600">Por género</h2>
-        <select
-          #selectorAnio
-          (change)="cambiarAnioGenero(selectorAnio.value)"
-          class="text-chico border border-gray-300 rounded-md px-2 py-1 text-gray-600"
-        >
-          <option value="todos">Todos</option>
-          @for (anio of porAnioLectura(); track anio.etiqueta) {
-            <option [value]="anio.etiqueta">{{ anio.etiqueta }}</option>
-          }
-        </select>
-      </div>
-
-      <app-grafico-treemap [datos]="porGenero()" />
-
-      @if (porGenero().length > 0) {
-        <div class="space-y-3">
-          @for (item of porGenero(); track item.etiqueta) {
-            <div>
-              <div class="flex justify-between text-xs text-gray-600 mb-1">
-                <span class="flex items-center gap-2">
-                  @if (iconoGenero(item.etiqueta); as slug) {
-                    <img
-                      [src]="'iconos-genero/' + slug + '.png'"
-                      [alt]="item.etiqueta"
-                      [title]="item.etiqueta"
-                      class="w-6 h-6 shrink-0"
-                    />
-                  }
-                  {{ item.etiqueta }}
-                </span>
-                <span>{{ item.cantidad }}</span>
-              </div>
-              <div class="w-full bg-gray-100 rounded-full h-2">
-                <div
-                  class="bg-orange-400 h-2 rounded-full"
-                  [style.width.%]="anchoBarra(item.cantidad, porGenero())"
-                ></div>
-              </div>
-            </div>
-          }
-        </div>
-      } @else {
-        <p class="text-xs text-gray-400">Sin libros leídos en este año.</p>
+    <!-- ======================= Contenido de la tab activa ======================= -->
+    @switch (tabActiva()) {
+      @case ('anio') {
+        <app-estadistica-por-anio
+          [porEstado]="porEstado()"
+          [porAnioLectura]="porAnioLectura()"
+        />
       }
-    </section>
-
-    <!-- ========================================================
-         Por autor: barra BICOLOR (ConteoDobleDTO), con selector
-         de año propio, y remarcado de los primeros 7 (más leídos).
-
-         - Vista "Todos": cantidadTotal no es null -> se dibujan
-           DOS barras superpuestas (fondo = total, encima = leídos).
-         - Vista con año: cantidadTotal es null -> se dibuja una
-           sola barra simple con cantidadLeidos.
-         - i < 7: como la lista ya viene ordenada desc desde el
-           backend, las primeras 7 filas son los autores más leídos;
-           se remarcan con fondo ámbar.
-         ======================================================== -->
-    <section class="bg-white rounded-md shadow-sm p-6 mb-6 mt-separador-mediano">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-sm font-semibold uppercase text-gray-600">Por autor</h2>
-        <select
-          #selectorAnioAutor
-          (change)="cambiarAnioAutor(selectorAnioAutor.value)"
-          class="text-xs border border-gray-300 rounded-md px-2 py-1 text-gray-600"
-        >
-          <option value="todos">Todos</option>
-          @for (anio of porAnioLectura(); track anio.etiqueta) {
-            <option [value]="anio.etiqueta">{{ anio.etiqueta }}</option>
-          }
-        </select>
-      </div>
-
-      @if (porAutor().length > 0) {
-        <div class="space-y-3">
-          @for (item of porAutor(); track item.etiqueta; let i = $index) {
-            <!-- Fondo ámbar solo en las primeras 7 filas (top autores) -->
-            <div class="rounded-md p-2" [class.bg-amber-50]="i < 7">
-              <div class="flex justify-between text-xs text-gray-600 mb-1">
-                <span class="flex items-center gap-2">
-                  @if (i < 7) {
-                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 text-white text-[10px] font-semibold">
-                      {{ i + 1 }}
-                    </span>
-                  }
-                  {{ item.etiqueta }}
-                </span>
-                <!-- "leídos / total" si hay total disponible, si no, solo leídos -->
-                <span>
-                  {{ item.cantidadTotal !== null ? item.cantidadLeidos + ' / ' + item.cantidadTotal : item.cantidadLeidos }}
-                </span>
-              </div>
-              <div class="w-full bg-gray-100 rounded-full h-2 relative">
-                @if (item.cantidadTotal !== null) {
-                  <!-- Barra bicolor: total de fondo (claro) + leídos superpuesta (oscuro) -->
-                  <div
-                    class="bg-orange-200 h-2 rounded-full absolute top-0 left-0"
-                    [style.width.%]="anchoBarraDoble(item, maximoAutor()).total"
-                  ></div>
-                  <div
-                    class="bg-orange-400 h-2 rounded-full absolute top-0 left-0"
-                    [style.width.%]="anchoBarraDoble(item, maximoAutor()).leidos"
-                  ></div>
-                } @else {
-                  <!-- Año filtrado: barra simple, solo leídos -->
-                  <div
-                    class="bg-orange-400 h-2 rounded-full"
-                    [style.width.%]="anchoBarraDoble(item, maximoAutor()).leidos"
-                  ></div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      } @else {
-        <p class="text-xs text-gray-400">Sin libros leídos en este año.</p>
+      @case ('genero') {
+        <app-estadistica-por-genero
+          [porGenero]="porGenero()"
+          [anios]="porAnioLectura()"
+          (anioCambiado)="cambiarAnioGenero($event)"
+        />
       }
-    </section>
-
-    <!-- ========================================================
-         Por país: misma lógica que "por autor" (barra bicolor +
-         selector de año propio), pero sin remarcado de top 7,
-         ya que ese remarcado es específico de autores.
-         ======================================================== -->
-    <section class="bg-white rounded-md shadow-sm p-6 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-sm font-semibold uppercase text-gray-600">Por país</h2>
-        <select
-          #selectorAnioPais
-          (change)="cambiarAnioPais(selectorAnioPais.value)"
-          class="text-xs border border-gray-300 rounded-md px-2 py-1 text-gray-600"
-        >
-          <option value="todos">Todos</option>
-          @for (anio of porAnioLectura(); track anio.etiqueta) {
-            <option [value]="anio.etiqueta">{{ anio.etiqueta }}</option>
-          }
-        </select>
-      </div>
-
-      @if (porPais().length > 0) {
-        <div class="space-y-3">
-          @for (item of porPais(); track item.etiqueta) {
-            <div>
-              <div class="flex justify-between text-xs text-gray-600 mb-1">
-                <span>{{ item.etiqueta }}</span>
-                <span>
-                  {{ item.cantidadTotal !== null ? item.cantidadLeidos + ' / ' + item.cantidadTotal : item.cantidadLeidos }}
-                </span>
-              </div>
-              <div class="w-full bg-gray-100 rounded-full h-2 relative">
-                @if (item.cantidadTotal !== null) {
-                  <div
-                    class="bg-orange-200 h-2 rounded-full absolute top-0 left-0"
-                    [style.width.%]="anchoBarraDoble(item, maximoPais()).total"
-                  ></div>
-                  <div
-                    class="bg-orange-400 h-2 rounded-full absolute top-0 left-0"
-                    [style.width.%]="anchoBarraDoble(item, maximoPais()).leidos"
-                  ></div>
-                } @else {
-                  <div
-                    class="bg-orange-400 h-2 rounded-full"
-                    [style.width.%]="anchoBarraDoble(item, maximoPais()).leidos"
-                  ></div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      } @else {
-        <p class="text-xs text-gray-400">Sin libros leídos en este año.</p>
+      @case ('autor') {
+        <app-estadistica-por-autor
+          [porAutor]="porAutor()"
+          [anios]="porAnioLectura()"
+          (anioCambiado)="cambiarAnioAutor($event)"
+        />
       }
-    </section>
+      @case ('pais') {
+        <app-estadistica-por-pais
+          [porPais]="porPais()"
+          [anios]="porAnioLectura()"
+          (anioCambiado)="cambiarAnioPais($event)"
+        />
+      }
+    }
   }
 </div>

@@ -1,0 +1,21 @@
+@if (porAnioLectura().length > 0) {
+  <section class="bg-gray-50/85 rounded-md shadow-sm p-6 mb-6">
+    <h2 class="text-mediana font-semibold uppercase text-gray-600 mb-4">Libros leídos por año</h2>
+    <div class="flex flex-col md:flex-row gap-4 mb-4">
+      <div class="md:w-1/3 min-w-0">
+        <app-grafico-pie [datos]="porEstado()" />
+      </div>
+      <div class="md:w-2/3 min-w-0">
+        <app-grafico-lineas [datos]="porAnioLectura()" />
+      </div>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+      @for (item of porAnioLectura(); track item.etiqueta) {
+        <div class="text-center bg-gray-50 rounded-md p-3">
+          <p class="text-lg font-semibold text-gray-800">{{ item.cantidad }}</p>
+          <p class="text-xs text-gray-500">{{ item.etiqueta }}</p>
+        </div>
+      }
+    </div>
+  </section>
+}

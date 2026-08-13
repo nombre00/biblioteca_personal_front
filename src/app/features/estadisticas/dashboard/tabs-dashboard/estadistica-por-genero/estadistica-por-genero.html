@@ -1,0 +1,48 @@
+<section class="bg-gray-50/85 rounded-md shadow-sm p-6 mb-6">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-mediana font-semibold uppercase text-gray-600">Por género</h2>
+    <select
+      #selectorAnio
+      (change)="anioCambiado.emit(selectorAnio.value)"
+      class="text-chico border border-gray-300 rounded-md px-2 py-1 text-gray-600"
+    >
+      <option value="todos">Todos</option>
+      @for (anio of anios(); track anio.etiqueta) {
+        <option [value]="anio.etiqueta">{{ anio.etiqueta }}</option>
+      }
+    </select>
+  </div>
+
+  <app-grafico-treemap [datos]="porGenero()" />
+
+  @if (porGenero().length > 0) {
+    <div class="space-y-3">
+      @for (item of porGenero(); track item.etiqueta) {
+        <div>
+          <div class="flex justify-between text-xs text-gray-600 mb-1">
+            <span class="flex items-center gap-2">
+              @if (iconoGenero(item.etiqueta); as slug) {
+                <img
+                  [src]="'iconos-genero/' + slug + '.png'"
+                  [alt]="item.etiqueta"
+                  [title]="item.etiqueta"
+                  class="w-6 h-6 shrink-0"
+                />
+              }
+              {{ item.etiqueta }}
+            </span>
+            <span>{{ item.cantidad }}</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-2">
+            <div
+              class="bg-orange-400 h-2 rounded-full"
+              [style.width.%]="anchoBarra(item.cantidad, porGenero())"
+            ></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="text-xs text-gray-400">Sin libros leídos en este año.</p>
+  }
+</section>

@@ -1,0 +1,21 @@
+<section class="bg-white rounded-md shadow-sm p-6 mb-6">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-sm font-semibold uppercase text-gray-600">Por autor</h2>
+    <select
+      #selectorAnio
+      (change)="anioCambiado.emit(selectorAnio.value)"
+      class="text-xs border border-gray-300 rounded-md px-2 py-1 text-gray-600"
+    >
+      <option value="todos">Todos</option>
+      @for (anio of anios(); track anio.etiqueta) {
+        <option [value]="anio.etiqueta">{{ anio.etiqueta }}</option>
+      }
+    </select>
+  </div>
+
+  @if (porAutor().length > 0) {
+    <app-grafico-barras [datos]="porAutor()" [destacarTop]="7" />
+  } @else {
+    <p class="text-xs text-gray-400">Sin libros leídos en este año.</p>
+  }
+</section>
