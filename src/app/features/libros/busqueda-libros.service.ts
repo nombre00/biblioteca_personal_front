@@ -33,7 +33,7 @@ export class BusquedaLibrosService {
   // servicio habla con agentes-ia (Python/FastAPI). El request y la
   // respuesta de /buscar y /resolver van en snake_case, tal cual está
   // definido en busqueda-externa.ts — no hay traducción de nombres acá.
-  private baseUrl = `${environment.gatewayUrl}/busqueda-libros`;
+  private baseUrl = `${environment.gatewayUrl}/ia/busqueda-libros`;
 
   buscar(request: BusquedaLibroRequest): Observable<BusquedaLibrosResponse> {
     return this.http.post<BusquedaLibrosResponse>(`${this.baseUrl}/buscar`, request);
@@ -119,4 +119,4 @@ export class BusquedaLibrosService {
   limpiarSeleccion(): void {
     this.seleccionActual.set(null);
   }
-}
+} 

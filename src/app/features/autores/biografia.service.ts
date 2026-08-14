@@ -9,9 +9,9 @@ import { BiografiaRequest, BiografiaResponse } from '../../core/models/biografia
 })
 export class BiografiaService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.gatewayUrl}/biografias`;
+  private baseUrl = `${environment.gatewayUrl}/ia/biografias`;
 
   obtener(autorId: number, datos: BiografiaRequest): Observable<BiografiaResponse> {
     return this.http.post<BiografiaResponse>(`${this.baseUrl}/${autorId}`, datos);
   }
-}
+} 

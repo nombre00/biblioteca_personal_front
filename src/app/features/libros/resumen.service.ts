@@ -7,9 +7,9 @@ import { ResumenRequest, ResumenResponse } from '../../core/models/resumen';
 @Injectable({ providedIn: 'root' })
 export class ResumenService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.gatewayUrl}/resumenes`;
+  private baseUrl = `${environment.gatewayUrl}/ia/resumenes`;
 
   obtener(libroId: number, datos: ResumenRequest): Observable<ResumenResponse> {
     return this.http.post<ResumenResponse>(`${this.baseUrl}/${libroId}`, datos);
   }
-}
+} 
