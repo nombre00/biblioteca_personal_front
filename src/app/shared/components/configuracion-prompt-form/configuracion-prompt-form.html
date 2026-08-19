@@ -1,0 +1,119 @@
+<div class="bg-white rounded-md shadow-sm border border-gray-200 p-6 mt-6">
+
+  <h2 class="text-lg font-semibold text-gray-800 mb-4">
+    {{ presetId() === 0 ? 'Nuevo preset' : 'Editar preset' }}
+  </h2>
+
+  @if (cargandoPreset()) {
+    <p class="text-gray-500">Cargando preset...</p>
+  }
+
+  @if (errorCarga()) {
+    <p class="text-red-600">{{ errorCarga() }}</p>
+  }
+
+  @if (!cargandoPreset()) {
+    <form (submit)="$event.preventDefault(); onSubmit()" class="space-y-4">
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+        <input
+          type="text"
+          [formField]="presetForm.nombre"
+          class="w-full border border-gray-300 rounded-md px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Límite de párrafos</label>
+        <input
+          type="text"
+          inputmode="numeric"
+          [formField]="presetForm.limiteParrafos"
+          class="w-32 border border-gray-300 rounded-md px-3 py-2"
+        />
+      </div>
+
+      @if (tipoTarea() === 'sinopsis') {
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="evitarSpoilers"
+            [checked]="evitarSpoilers()"
+            (change)="evitarSpoilers.set($any($event.target).checked)"
+          />
+          <label for="evitarSpoilers" class="text-sm text-gray-700">Evitar spoilers</label>
+        </div>
+      }
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Líneas libres</label>
+
+        <div class="flex gap-2 mb-2">
+          <input
+            type="text"
+            [value]="lineaNueva()"
+            (input)="lineaNueva.set($any($event.target).value)"
+            (keydown.enter)="$event.preventDefault(); agregarLinea()"
+            placeholder="Agregar línea..."
+            class="flex-1 border border-gray-300 rounded-md px-3 py-2"
+          />
+          <button
+            type="button"
+            (click)="agregarLinea()"
+            class="px-3 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            Agregar
+          </button>
+        </div>
+
+        <ul class="space-y-1">
+          @for (linea of lineas(); track $index) {
+            <li class="flex items-center justify-between bg-gray-50 rounded-md px-3 py-1.5 text-sm text-gray-700">
+              <span>{{ linea }}</span>
+              <button
+                type="button"
+                (click)="eliminarLinea($index)"
+                class="text-red-500 hover:text-red-700 font-semibold px-2"
+              >
+                ×
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Previsualización (segmento editable)
+        </label>
+        <p class="text-sm text-gray-600 bg-gray-50 rounded-md p-3 whitespace-pre-wrap">
+          {{ preview() }}
+        </p>
+      </div>
+
+      @if (errorEnvio()) {
+        <p class="text-red-600 text-sm">{{ errorEnvio() }}</p>
+      }
+
+      <div class="flex gap-2">
+        <button
+          type="submit"
+          [disabled]="enviando()"
+          class="px-4 py-2 rounded-md bg-amber-700 text-white hover:bg-amber-800 disabled:opacity-50"
+        >
+          {{ enviando() ? 'Guardando...' : 'Guardar' }}
+        </button>
+        <button
+          type="button"
+          (click)="cancelado.emit()"
+          class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+        >
+          Cancelar
+        </button>
+      </div>
+
+    </form>
+  }
+
+</div>

@@ -7,7 +7,8 @@ import { LibroForm } from './features/libros/libro-form/libro-form';
 import { AutorList } from './features/autores/autor-list/autor-list';
 import { AutorDetail } from './features/autores/autor-detail/autor-detail';
 import { AutorForm } from './features/autores/autor-form/autor-form';
-import { Dashboard } from './features/estadisticas/dashboard/dashboard';
+import { Dashboard as DashboardEstadisticas } from './features/estadisticas/dashboard/dashboard';
+import { Dashboard as DashboardGestionIa } from './features/gestion-ia/dashboard/dashboard';
 import { authGuard } from './core/guards/auth-guard';
 import { Buscar } from './features/libros/buscar/buscar';
 import { ConfirmarImportar } from './features/libros/confirmar-importar/confirmar-importar';
@@ -23,5 +24,6 @@ export const routes: Routes = [
   { path: 'autores', component: AutorList, canActivate: [authGuard] },
   { path: 'autores/gestionar', component: AutorForm, canActivate: [authGuard] },
   { path: 'autores/:id', component: AutorDetail, canActivate: [authGuard] },
-  { path: 'estadisticas', component: Dashboard, canActivate: [authGuard] },
+  { path: 'estadisticas', component: DashboardEstadisticas, canActivate: [authGuard] },
+  { path: 'gestion-ia', component: DashboardGestionIa, canActivate: [authGuard] },
 ];

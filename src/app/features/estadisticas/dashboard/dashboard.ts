@@ -7,7 +7,7 @@ import { EstadisticaPorGenero } from './tabs-dashboard/estadistica-por-genero/es
 import { EstadisticaPorAutor } from './tabs-dashboard/estadistica-por-autor/estadistica-por-autor';
 import { EstadisticaPorPais } from './tabs-dashboard/estadistica-por-pais/estadistica-por-pais';
 
-type TabEstadistica = 'anio' | 'genero' | 'autor' | 'pais';
+type TabEstadistica = 'anio' | 'genero' | 'autor' | 'pais'; 
 
 @Component({
   selector: 'app-dashboard',
