@@ -7,7 +7,9 @@ import {
   ConfiguracionPromptCreate,
   ConfiguracionPromptUpdate,
   TipoTareaIa,
-} from '../../core/models/gestion-ia';
+  PruebaPromptRequest,
+  PruebaPromptResponse,
+} from '../../core/models/gestion-ia'; 
 
 @Injectable({
   providedIn: 'root',
@@ -38,5 +40,10 @@ export class GestionIaService {
 
   activar(configuracionId: number): Observable<ConfiguracionPrompt> {
     return this.http.patch<ConfiguracionPrompt>(`${this.baseUrl}/detalle/${configuracionId}/activar`, {});
+  }
+
+  // Prueba el prompt activo con el que estamos creando o editando.
+  probar(tipoTarea: TipoTareaIa, datos: PruebaPromptRequest): Observable<PruebaPromptResponse> {
+    return this.http.post<PruebaPromptResponse>(`${this.baseUrl}/${tipoTarea}/probar`, datos);
   }
 }

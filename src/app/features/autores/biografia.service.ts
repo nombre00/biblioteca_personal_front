@@ -14,4 +14,8 @@ export class BiografiaService {
   obtener(autorId: number, datos: BiografiaRequest): Observable<BiografiaResponse> {
     return this.http.post<BiografiaResponse>(`${this.baseUrl}/${autorId}`, datos);
   }
+
+  obtenerGuardado(autorId: number): Observable<BiografiaResponse | null> {
+    return this.http.get<BiografiaResponse | null>(`${this.baseUrl}/${autorId}`);
+  }
 } 

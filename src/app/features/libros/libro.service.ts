@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LibroDTO, LibroFiltroDTO, LibroResponseDTO } from '../../core/models/libro';
+import { LibroDTO, LibroFiltroDTO, LibroResponseDTO } from '../../core/models/libro'; 
 
 @Injectable({
   providedIn: 'root'

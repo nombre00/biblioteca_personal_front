@@ -36,3 +36,20 @@ export interface ConfiguracionPromptUpdate {
   evitar_spoilers?: boolean | null;
   lineas?: LineaPromptCreate[];
 }
+
+export interface PruebaPromptRequest {
+  nombre_autor?: string;
+  nacionalidad?: string;
+  anio_nacimiento?: number;
+  anio_defuncion?: number;
+  titulo_libro?: string;
+  genero?: string;
+  limite_parrafos: number;
+  evitar_spoilers?: boolean | null;
+  lineas: LineaPromptCreate[];
+}
+
+export interface PruebaPromptResponse {
+  prompt: string;
+  texto_generado: string;
+}

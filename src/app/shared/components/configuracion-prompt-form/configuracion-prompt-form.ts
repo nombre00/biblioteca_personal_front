@@ -4,9 +4,19 @@ import { firstValueFrom } from 'rxjs';
 import { form, FormField, submit, required } from '@angular/forms/signals';
 
 import { GestionIaService } from '../../../features/gestion-ia/gestion-ia.service';
+import { AutorService } from '../../../features/autores/autor.service';
+import { LibroService } from '../../../features/libros/libro.service';
+import { ResumenService } from '../../../features/libros/resumen.service';
+import { BiografiaService } from '../../../features/autores/biografia.service';
+import { AutorResponseDTO } from '../../../core/models/autor';
+import { LibroResponseDTO } from '../../../core/models/libro';
+import { ResumenResponse } from '../../../core/models/resumen';
+import { BiografiaResponse } from '../../../core/models/biografia';
 import {
   ConfiguracionPromptCreate,
   ConfiguracionPromptUpdate,
+  PruebaPromptRequest,
+  PruebaPromptResponse,
   TipoTareaIa,
 } from '../../../core/models/gestion-ia';
 import { construirPreviewSegmentoEditable } from '../../../core/utils/prompt-preview.util';
@@ -29,6 +39,10 @@ const MODELO_VACIO: ConfiguracionPromptFormModel = {
 })
 export class ConfiguracionPromptForm {
   private gestionIaService = inject(GestionIaService);
+  private autorService = inject(AutorService);
+  private libroService = inject(LibroService);
+  private resumenService = inject(ResumenService);
+  private biografiaService = inject(BiografiaService);
 
   // tipoTarea define a qué endpoint/tarea pertenece el preset.
   // presetId = 0 significa modo creación (mismo criterio que autorSeleccionadoId en AutorForm).
@@ -50,6 +64,29 @@ export class ConfiguracionPromptForm {
   evitarSpoilers = signal(false);
   lineas = signal<string[]>([]);
   lineaNueva = signal('');
+
+  // Datos para el panel de prueba: selección de autor/libro real según la tarea.
+  autores = signal<AutorResponseDTO[]>([]);
+  libros = signal<LibroResponseDTO[]>([]);
+  cargandoOpciones = signal(false);
+  autorSeleccionadoId = signal<number | null>(null);
+  libroSeleccionadoId = signal<number | null>(null);
+
+  autorSeleccionado = computed(() =>
+    this.autores().find((a) => a.id === this.autorSeleccionadoId()) ?? null
+  );
+  libroSeleccionado = computed(() =>
+    this.libros().find((l) => l.id === this.libroSeleccionadoId()) ?? null
+  );
+
+  // Versión ya guardada del autor/libro seleccionado, para comparar contra la
+  // nueva generada con el borrador actual. null = sin versión guardada aún.
+  textoGuardadoComparacion = signal<ResumenResponse | BiografiaResponse | null>(null);
+  cargandoGuardado = signal(false);
+
+  probando = signal(false);
+  errorProbar = signal<string | null>(null);
+  resultadoPrueba = signal<PruebaPromptResponse | null>(null);
 
   protected readonly model = signal<ConfiguracionPromptFormModel>({ ...MODELO_VACIO });
 
@@ -73,6 +110,13 @@ export class ConfiguracionPromptForm {
       const id = this.presetId();
       this.errorCarga.set(null);
       this.errorEnvio.set(null);
+      this.errorProbar.set(null);
+      this.resultadoPrueba.set(null);
+
+      // Cambiar de preset invalida cualquier selección/comparación previa del panel de prueba.
+      this.autorSeleccionadoId.set(null);
+      this.libroSeleccionadoId.set(null);
+      this.textoGuardadoComparacion.set(null);
 
       if (id === 0) {
         this.model.set({ ...MODELO_VACIO });
@@ -98,6 +142,65 @@ export class ConfiguracionPromptForm {
         },
       });
     });
+
+    // Carga autores/libros reales para el panel de prueba, según la tarea.
+    // Depende solo de tipoTarea(), no de presetId(): se carga una sola vez
+    // al montar el formulario, no en cada cambio de preset seleccionado.
+    effect(() => {
+      const tarea = this.tipoTarea();
+      this.cargandoOpciones.set(true);
+
+      if (tarea === 'biografia') {
+        this.autorService.listarTodos().subscribe({
+          next: (autores) => {
+            this.autores.set(autores);
+            this.cargandoOpciones.set(false);
+          },
+          error: () => this.cargandoOpciones.set(false),
+        });
+      } else {
+        this.libroService.listarTodos().subscribe({
+          next: (libros) => {
+            this.libros.set(libros);
+            this.cargandoOpciones.set(false);
+          },
+          error: () => this.cargandoOpciones.set(false),
+        });
+      }
+    });
+
+    // Al elegir un autor/libro, busca de inmediato su versión ya guardada
+    // (solo lectura, no genera nada) para poder mostrarla en la comparación
+    // aunque el usuario todavía no haya presionado "Probar".
+    effect(() => {
+      const tarea = this.tipoTarea();
+      const autorId = this.autorSeleccionadoId();
+      const libroId = this.libroSeleccionadoId();
+
+      this.textoGuardadoComparacion.set(null);
+      this.resultadoPrueba.set(null);
+      this.errorProbar.set(null);
+
+      if (tarea === 'biografia' && autorId != null) {
+        this.cargandoGuardado.set(true);
+        this.biografiaService.obtenerGuardado(autorId).subscribe({
+          next: (r) => {
+            this.textoGuardadoComparacion.set(r);
+            this.cargandoGuardado.set(false);
+          },
+          error: () => this.cargandoGuardado.set(false),
+        });
+      } else if (tarea === 'sinopsis' && libroId != null) {
+        this.cargandoGuardado.set(true);
+        this.resumenService.obtenerGuardado(libroId).subscribe({
+          next: (r) => {
+            this.textoGuardadoComparacion.set(r);
+            this.cargandoGuardado.set(false);
+          },
+          error: () => this.cargandoGuardado.set(false),
+        });
+      }
+    });
   }
 
   agregarLinea(): void {
@@ -109,6 +212,14 @@ export class ConfiguracionPromptForm {
 
   eliminarLinea(index: number): void {
     this.lineas.update((l) => l.filter((_, i) => i !== index));
+  }
+
+  onAutorSeleccionado(value: string): void {
+    this.autorSeleccionadoId.set(value ? Number(value) : null);
+  }
+
+  onLibroSeleccionado(value: string): void {
+    this.libroSeleccionadoId.set(value ? Number(value) : null);
   }
 
   onSubmit(): void {
@@ -152,5 +263,63 @@ export class ConfiguracionPromptForm {
         this.enviando.set(false);
       }
     });
+  }
+
+  async probar(): Promise<void> {
+    this.errorProbar.set(null);
+    this.resultadoPrueba.set(null);
+
+    const limiteParrafos = Number(this.model().limiteParrafos);
+    if (!limiteParrafos) {
+      this.errorProbar.set('Define un límite de párrafos antes de probar.');
+      return;
+    }
+
+    let datos: PruebaPromptRequest;
+
+    if (this.tipoTarea() === 'biografia') {
+      const autor = this.autorSeleccionado();
+      if (!autor) {
+        this.errorProbar.set('Selecciona un autor para probar.');
+        return;
+      }
+      datos = {
+        nombre_autor: autor.nombre,
+        nacionalidad: autor.pais?.nombre,
+        anio_nacimiento: autor.anioNacimientoAprox ?? this.extraerAnio(autor.fechaNacimiento),
+        anio_defuncion: autor.anioDefuncionAprox ?? this.extraerAnio(autor.fechaDefuncion),
+        limite_parrafos: limiteParrafos,
+        lineas: this.lineas().map((texto) => ({ texto })),
+      };
+    } else {
+      const libro = this.libroSeleccionado();
+      if (!libro) {
+        this.errorProbar.set('Selecciona un libro para probar.');
+        return;
+      }
+      datos = {
+        titulo_libro: libro.titulo,
+        nombre_autor: libro.autor.nombre,
+        genero: libro.generos[0]?.nombre,
+        limite_parrafos: limiteParrafos,
+        evitar_spoilers: this.evitarSpoilers(),
+        lineas: this.lineas().map((texto) => ({ texto })),
+      };
+    }
+
+    this.probando.set(true);
+    try {
+      const resultado = await firstValueFrom(this.gestionIaService.probar(this.tipoTarea(), datos));
+      this.resultadoPrueba.set(resultado);
+    } catch (err) {
+      const body = (err as HttpErrorResponse).error;
+      this.errorProbar.set(body?.mensaje ?? body?.detail ?? 'Ocurrió un error al probar el prompt.');
+    } finally {
+      this.probando.set(false);
+    }
+  }
+
+  private extraerAnio(fecha?: string): number | undefined {
+    return fecha ? new Date(fecha).getFullYear() : undefined;
   }
 }

@@ -12,4 +12,8 @@ export class ResumenService {
   obtener(libroId: number, datos: ResumenRequest): Observable<ResumenResponse> {
     return this.http.post<ResumenResponse>(`${this.baseUrl}/${libroId}`, datos);
   }
+
+  obtenerGuardado(libroId: number): Observable<ResumenResponse | null> {
+    return this.http.get<ResumenResponse | null>(`${this.baseUrl}/${libroId}`);
+  }
 } 

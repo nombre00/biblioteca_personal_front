@@ -92,6 +92,113 @@
         </p>
       </div>
 
+      <div class="border-t border-gray-200 pt-4">
+        <h3 class="text-md font-semibold text-gray-800 mb-2">Probar y comparar</h3>
+        <p class="text-xs text-gray-500 mb-3">
+          Compara la versión ya guardada con la que generaría este borrador
+          (prompt real, con contexto de Wikipedia). Probar no guarda nada.
+        </p>
+
+        @if (cargandoOpciones()) {
+          <p class="text-gray-500 text-sm">
+            Cargando {{ tipoTarea() === 'biografia' ? 'autores' : 'libros' }}...
+          </p>
+        }
+
+        @if (!cargandoOpciones() && tipoTarea() === 'biografia') {
+          <select
+            [value]="autorSeleccionadoId() ?? ''"
+            (change)="onAutorSeleccionado($any($event.target).value)"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 mb-3"
+          >
+            <option value="">Selecciona un autor...</option>
+            @for (autor of autores(); track autor.id) {
+              <option [value]="autor.id">{{ autor.nombre }}</option>
+            }
+          </select>
+        }
+
+        @if (!cargandoOpciones() && tipoTarea() === 'sinopsis') {
+          <select
+            [value]="libroSeleccionadoId() ?? ''"
+            (change)="onLibroSeleccionado($any($event.target).value)"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 mb-3"
+          >
+            <option value="">Selecciona un libro...</option>
+            @for (libro of libros(); track libro.id) {
+              <option [value]="libro.id">{{ libro.titulo }} — {{ libro.autor.nombre }}</option>
+            }
+          </select>
+        }
+
+        @if (autorSeleccionadoId() != null || libroSeleccionadoId() != null) {
+          <button
+            type="button"
+            [disabled]="probando()"
+            (click)="probar()"
+            class="px-4 py-2 rounded-md bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-50 mb-3"
+          >
+            {{ probando() ? 'Probando...' : 'Probar' }}
+          </button>
+
+          @if (errorProbar()) {
+            <p class="text-red-600 text-sm mb-3">{{ errorProbar() }}</p>
+          }
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Versión guardada actualmente
+              </label>
+              @if (cargandoGuardado()) {
+                <p class="text-sm text-gray-500 bg-gray-50 rounded-md p-3">
+                  Buscando versión guardada...
+                </p>
+              } @else if (textoGuardadoComparacion()) {
+                <p class="text-sm text-gray-700 bg-gray-50 rounded-md p-3 whitespace-pre-wrap">
+                  {{ textoGuardadoComparacion()!.texto }}
+                </p>
+              } @else {
+                <p class="text-sm text-gray-400 italic bg-gray-50 rounded-md p-3">
+                  Aún no hay una versión guardada para
+                  {{ tipoTarea() === 'biografia' ? 'este autor' : 'este libro' }}.
+                </p>
+              }
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Nueva versión (con este borrador)
+              </label>
+              @if (probando()) {
+                <p class="text-sm text-gray-500 bg-blue-50 rounded-md p-3">
+                  Generando...
+                </p>
+              } @else if (resultadoPrueba()) {
+                <p class="text-sm text-gray-800 bg-amber-50 rounded-md p-3 whitespace-pre-wrap">
+                  {{ resultadoPrueba()!.texto_generado }}
+                </p>
+              } @else {
+                <p class="text-sm text-gray-400 italic bg-gray-50 rounded-md p-3">
+                  Haz clic en "Probar" para generar la nueva versión.
+                </p>
+              }
+            </div>
+
+          </div>
+
+          @if (resultadoPrueba()) {
+            <div class="mt-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Prompt completo usado</label>
+              <p class="text-xs text-gray-500 bg-gray-50 rounded-md p-3 whitespace-pre-wrap">
+                {{ resultadoPrueba()!.prompt }}
+              </p>
+            </div>
+          }
+        }
+      </div>
+
       @if (errorEnvio()) {
         <p class="text-red-600 text-sm">{{ errorEnvio() }}</p>
       }
