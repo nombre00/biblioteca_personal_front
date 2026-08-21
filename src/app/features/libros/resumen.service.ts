@@ -16,4 +16,8 @@ export class ResumenService {
   obtenerGuardado(libroId: number): Observable<ResumenResponse | null> {
     return this.http.get<ResumenResponse | null>(`${this.baseUrl}/${libroId}`);
   }
+
+  adoptar(libroId: number, texto: string): Observable<ResumenResponse> {
+    return this.http.put<ResumenResponse>(`${this.baseUrl}/${libroId}`, { texto });
+  }
 } 

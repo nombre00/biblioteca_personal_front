@@ -18,4 +18,8 @@ export class BiografiaService {
   obtenerGuardado(autorId: number): Observable<BiografiaResponse | null> {
     return this.http.get<BiografiaResponse | null>(`${this.baseUrl}/${autorId}`);
   }
-} 
+
+  adoptar(autorId: number, texto: string): Observable<BiografiaResponse> {
+    return this.http.put<BiografiaResponse>(`${this.baseUrl}/${autorId}`, { texto });
+  }
+}  

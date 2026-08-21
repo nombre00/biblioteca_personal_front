@@ -88,6 +88,11 @@ export class ConfiguracionPromptForm {
   errorProbar = signal<string | null>(null);
   resultadoPrueba = signal<PruebaPromptResponse | null>(null);
 
+  // Estado del botón "Adoptar este texto": sobrescribe la versión guardada
+  // con el resultado de "Probar", sin volver a llamar a Wikipedia/Gemini.
+  adoptando = signal(false);
+  errorAdoptar = signal<string | null>(null);
+
   protected readonly model = signal<ConfiguracionPromptFormModel>({ ...MODELO_VACIO });
 
   protected readonly presetForm = form(this.model, (s) => {
@@ -112,6 +117,7 @@ export class ConfiguracionPromptForm {
       this.errorEnvio.set(null);
       this.errorProbar.set(null);
       this.resultadoPrueba.set(null);
+      this.errorAdoptar.set(null);
 
       // Cambiar de preset invalida cualquier selección/comparación previa del panel de prueba.
       this.autorSeleccionadoId.set(null);
@@ -180,6 +186,7 @@ export class ConfiguracionPromptForm {
       this.textoGuardadoComparacion.set(null);
       this.resultadoPrueba.set(null);
       this.errorProbar.set(null);
+      this.errorAdoptar.set(null);
 
       if (tarea === 'biografia' && autorId != null) {
         this.cargandoGuardado.set(true);
@@ -268,6 +275,7 @@ export class ConfiguracionPromptForm {
   async probar(): Promise<void> {
     this.errorProbar.set(null);
     this.resultadoPrueba.set(null);
+    this.errorAdoptar.set(null);
 
     const limiteParrafos = Number(this.model().limiteParrafos);
     if (!limiteParrafos) {
@@ -316,6 +324,43 @@ export class ConfiguracionPromptForm {
       this.errorProbar.set(body?.mensaje ?? body?.detail ?? 'Ocurrió un error al probar el prompt.');
     } finally {
       this.probando.set(false);
+    }
+  }
+
+  async adoptarTexto(): Promise<void> {
+    const resultado = this.resultadoPrueba();
+    if (!resultado) return;
+
+    const autorId = this.autorSeleccionadoId();
+    const libroId = this.libroSeleccionadoId();
+
+    const confirmado = confirm(
+      'Esto reemplazará el texto guardado actualmente (usado en producción) por el generado en esta prueba. ¿Continuar?'
+    );
+    if (!confirmado) return;
+
+    this.errorAdoptar.set(null);
+    this.adoptando.set(true);
+
+    try {
+      if (this.tipoTarea() === 'biografia' && autorId != null) {
+        const actualizado = await firstValueFrom(
+          this.biografiaService.adoptar(autorId, resultado.texto_generado)
+        );
+        this.textoGuardadoComparacion.set(actualizado);
+      } else if (this.tipoTarea() === 'sinopsis' && libroId != null) {
+        const actualizado = await firstValueFrom(
+          this.resumenService.adoptar(libroId, resultado.texto_generado)
+        );
+        this.textoGuardadoComparacion.set(actualizado);
+      }
+    } catch (err) {
+      const body = (err as HttpErrorResponse).error;
+      this.errorAdoptar.set(
+        body?.mensaje ?? body?.detail ?? 'Ocurrió un error al adoptar el texto.'
+      );
+    } finally {
+      this.adoptando.set(false);
     }
   }
 
